@@ -3,9 +3,8 @@ using System.Reflection;
 
 namespace ProxyGenerator.Core
 {
-    public interface IInvocation
+    public class Invocation:IInvocation
     {
-        object[] Arguments { get; }
-
+        public object[] Arguments { get; set; }
     }
 }
