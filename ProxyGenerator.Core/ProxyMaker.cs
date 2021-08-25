@@ -219,7 +219,23 @@ namespace ProxyGenerator.Core
 
                     generator.Emit(OpCodes.Callvirt, typeof(Invocation).GetProperty(nameof(Invocation.Arguments))!.SetMethod!);
 
+
+                    //Set Original
+                    generator.Emit(OpCodes.Ldloc_0);
+                    generator.Emit(OpCodes.Ldarg_0);
+                    generator.Emit(OpCodes.Ldfld, _fieldBuilder);
+                    generator.Emit(OpCodes.Callvirt, typeof(Invocation).GetProperty(nameof(Invocation.Original))!.SetMethod!);
+
+                    //Set Method
+                    generator.Emit(OpCodes.Ldloc_0);
+                    generator.Emit(OpCodes.Dup);
+                    generator.Emit(OpCodes.Ldtoken,methodInfo);
+                    generator.Emit(OpCodes.Call,typeof(MethodBase).GetMethods().FirstOrDefault(x => x.GetParameters().Length == 1 && x.Name == nameof(MethodInfo.GetMethodFromHandle)));
+                    generator.Emit(OpCodes.Castclass,typeof(MethodInfo));
+                    generator.Emit(OpCodes.Callvirt, typeof(Invocation).GetProperty(nameof(Invocation.Method))!.SetMethod!);
                     
+                    //Set Other Field
+                    generator.Emit(OpCodes.Call,typeof(ProxyHelperMethods).GetMethod(nameof(ProxyHelperMethods.FillInvocationProperties)));
 
                     generator.Emit(OpCodes.Ldc_I4_S, _interceptor.Length);
                     generator.Emit(OpCodes.Newarr, typeof(IInterceptor));
