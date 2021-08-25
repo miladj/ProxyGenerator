@@ -1,7 +1,6 @@
 using System;
 using Moq;
 using NUnit.Framework;
-using ProxyGenerator.Core;
 
 namespace ProxyGenerator.Test
 {
@@ -19,7 +18,7 @@ namespace ProxyGenerator.Test
         public void VoidZeroParameterMethod()
         {
             var mock = new Moq.Mock<INonGeneric>();
-            Type proxy = new ProxyMaker(typeof(INonGeneric)).CreateProxy();
+            Type proxy = new Core.ProxyMaker(typeof(INonGeneric)).CreateProxy();
             INonGeneric createdObjectFromProxy = Activator.CreateInstance(proxy, mock.Object) as INonGeneric;
             Assert.NotNull(createdObjectFromProxy);
             createdObjectFromProxy.Test();
