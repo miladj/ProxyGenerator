@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProxyGenerator.Core", "Prox
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProxyGenerator.Test", "ProxyGenerator.Test\ProxyGenerator.Test.csproj", "{A1714844-608B-4B01-8C36-40526DF181DE}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProxyGenerator.Benchmark", "ProxyGenerator.Benchmark\ProxyGenerator.Benchmark.csproj", "{DC671DC8-355F-407C-BF9F-D8691683FC18}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{A1714844-608B-4B01-8C36-40526DF181DE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{A1714844-608B-4B01-8C36-40526DF181DE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{A1714844-608B-4B01-8C36-40526DF181DE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DC671DC8-355F-407C-BF9F-D8691683FC18}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DC671DC8-355F-407C-BF9F-D8691683FC18}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DC671DC8-355F-407C-BF9F-D8691683FC18}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DC671DC8-355F-407C-BF9F-D8691683FC18}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
