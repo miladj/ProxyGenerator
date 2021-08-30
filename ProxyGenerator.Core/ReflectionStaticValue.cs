@@ -38,7 +38,8 @@ namespace ProxyGenerator.Core
         #region MethodInfo
 
         public static readonly MethodInfo MethodBase_GetMethodFromHandle =
-            typeof(MethodBase).GetMethod(nameof(MethodInfo.GetMethodFromHandle), new[] {typeof(RuntimeMethodHandle)});
+            typeof(MethodBase).GetMethod(nameof(MethodInfo.GetMethodFromHandle),
+                new[] {typeof(RuntimeMethodHandle), typeof(RuntimeTypeHandle)});
 
         public static readonly MethodInfo InterceptorHelper_Intercept =
             TypeInterceptorHelper.GetMethod(nameof(InterceptorHelper.Intercept));

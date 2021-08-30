@@ -1,6 +1,7 @@
 using System;
 using Moq;
 using NUnit.Framework;
+using ProxyGenerator.Core;
 
 namespace ProxyGenerator.Test
 {
@@ -19,17 +20,27 @@ namespace ProxyGenerator.Test
         {
             var mock = new Moq.Mock<INonGeneric>();
             Type proxy = new Core.ProxyMaker(typeof(INonGeneric)).CreateProxy();
-            INonGeneric createdObjectFromProxy = Activator.CreateInstance(proxy, mock.Object) as INonGeneric;
+            INonGeneric createdObjectFromProxy = Activator.CreateInstance(proxy, mock.Object, Array.Empty<IInterceptor>()) as INonGeneric;
             Assert.NotNull(createdObjectFromProxy);
             createdObjectFromProxy.Test();
             mock.Verify(x=>x.Test());
+        }
+        [Test]
+        public void VoidZeroParameterMethod_Interceptor()
+        {
+            var mock = new Moq.Mock<INonGeneric>();
+            Type proxy = new Core.ProxyMaker(typeof(INonGeneric)).CreateProxy();
+            INonGeneric createdObjectFromProxy = Activator.CreateInstance(proxy, mock.Object, new IInterceptor[]{new PassThoughInterceptor()}) as INonGeneric;
+            Assert.NotNull(createdObjectFromProxy);
+            createdObjectFromProxy.Test();
+            mock.Verify(x => x.Test());
         }
         [Test]
         public void VoidSingleParameterMethod()
         {
             var mock = new Moq.Mock<INonGeneric>();
             Type proxy = new Core.ProxyMaker(typeof(INonGeneric)).CreateProxy();
-            INonGeneric createdObjectFromProxy = Activator.CreateInstance(proxy, mock.Object) as INonGeneric;
+            INonGeneric createdObjectFromProxy = Activator.CreateInstance(proxy, mock.Object, Array.Empty<IInterceptor>()) as INonGeneric;
             Assert.NotNull(createdObjectFromProxy);
             createdObjectFromProxy.Test(10);
             mock.Verify(x => x.Test(It.Is<int>(z=>z==10)));
@@ -39,7 +50,7 @@ namespace ProxyGenerator.Test
         {
             var mock = new Moq.Mock<INonGeneric>();
             Type proxy = new Core.ProxyMaker(typeof(INonGeneric)).CreateProxy();
-            INonGeneric createdObjectFromProxy = Activator.CreateInstance(proxy, mock.Object) as INonGeneric;
+            INonGeneric createdObjectFromProxy = Activator.CreateInstance(proxy, mock.Object, Array.Empty<IInterceptor>()) as INonGeneric;
             Assert.NotNull(createdObjectFromProxy);
             createdObjectFromProxy.Test(1,2,3,4,5,6);
             mock.Verify(x => x.Test(It.IsIn(1), It.IsIn(2), It.IsIn(3), It.IsIn(4), It.IsIn(5), It.IsIn(6)));
@@ -52,7 +63,7 @@ namespace ProxyGenerator.Test
             const string input = "Hello";
             mock.Setup(x => x.Test(It.Is<string>(z => z == input))).Returns(expectedReturnValue);
             Type proxy = new Core.ProxyMaker(typeof(INonGeneric)).CreateProxy();
-            INonGeneric createdObjectFromProxy = Activator.CreateInstance(proxy, mock.Object) as INonGeneric;
+            INonGeneric createdObjectFromProxy = Activator.CreateInstance(proxy, mock.Object,Array.Empty<IInterceptor>()) as INonGeneric;
             Assert.NotNull(createdObjectFromProxy);
             decimal actualRv = createdObjectFromProxy.Test(input);
             Assert.AreEqual(expectedReturnValue,actualRv);
@@ -69,7 +80,7 @@ namespace ProxyGenerator.Test
                     It.Is<decimal>(z => z == expectedDecimalRv)))
                 .Returns((expectedDecimalRv, expectedStringRv));
             Type proxy = new Core.ProxyMaker(typeof(INonGeneric)).CreateProxy();
-            INonGeneric createdObjectFromProxy = Activator.CreateInstance(proxy, mock.Object) as INonGeneric;
+            INonGeneric createdObjectFromProxy = Activator.CreateInstance(proxy, mock.Object, Array.Empty<IInterceptor>()) as INonGeneric;
             Assert.NotNull(createdObjectFromProxy);
             var (actualDecimalRv,actualStringRv) = createdObjectFromProxy.Test(expectedStringRv, expectedDecimalRv);
             Assert.AreEqual(expectedDecimalRv, actualDecimalRv);

@@ -38,7 +38,7 @@ namespace ProxyGenerator.Test
             ProxyMaker proxyMaker = new ProxyMaker(typeof(IChild));
             Type proxy = proxyMaker.CreateProxy();
             Mock<IChild> mock = new Mock<IChild>();
-            IChild instance = Activator.CreateInstance(proxy,mock.Object) as IChild;
+            IChild instance = Activator.CreateInstance(proxy,mock.Object, Array.Empty<IInterceptor>()) as IChild;
             instance.Test();
             mock.Verify(x=>x.Test());
         }
@@ -48,7 +48,17 @@ namespace ProxyGenerator.Test
             ProxyMaker proxyMaker = new ProxyMaker(typeof(IChild2));
             Type proxy = proxyMaker.CreateProxy();
             Mock<IChild2> mock = new Mock<IChild2>();
-            IChild2 instance = Activator.CreateInstance(proxy, mock.Object) as IChild2;
+            IChild2 instance = Activator.CreateInstance(proxy, mock.Object, Array.Empty<IInterceptor>()) as IChild2;
+            instance.Test();
+            mock.Verify(x => x.Test());
+        }
+        [Test]
+        public void TestIChild2_Interceptor()
+        {
+            ProxyMaker proxyMaker = new ProxyMaker(typeof(IChild2));
+            Type proxy = proxyMaker.CreateProxy();
+            Mock<IChild2> mock = new Mock<IChild2>();
+            IChild2 instance = Activator.CreateInstance(proxy, mock.Object, new IInterceptor[]{new PassThoughInterceptor()}) as IChild2;
             instance.Test();
             mock.Verify(x => x.Test());
         }
@@ -60,10 +70,23 @@ namespace ProxyGenerator.Test
             Type proxy = proxyMaker.CreateProxy();
             Mock<AbstractClassBase<string>> mock = new Mock<AbstractClassBase<string>>();
             mock.Setup(x => x.Test(10)).Returns("OK");
-            AbstractClassBase<string> instance = Activator.CreateInstance(proxy.MakeGenericType(typeof(string)), mock.Object) as AbstractClassBase<string>;
+            AbstractClassBase<string> instance = Activator.CreateInstance(proxy.MakeGenericType(typeof(string)), mock.Object, Array.Empty<IInterceptor>()) as AbstractClassBase<string>;
             var actualRv=instance.Test(10);
             Assert.AreEqual(actualRv,"OK");
             
+        }
+        [Test]
+        public void TestAbstractClassBase_Interceptor()
+        {
+            ProxyMaker proxyMaker = new ProxyMaker(typeof(AbstractClassBase<>));
+
+            Type proxy = proxyMaker.CreateProxy();
+            Mock<AbstractClassBase<string>> mock = new Mock<AbstractClassBase<string>>();
+            mock.Setup(x => x.Test(10)).Returns("OK");
+            AbstractClassBase<string> instance = Activator.CreateInstance(proxy.MakeGenericType(typeof(string)), mock.Object, new IInterceptor[]{new PassThoughInterceptor()}) as AbstractClassBase<string>;
+            var actualRv = instance.Test(10);
+            Assert.AreEqual(actualRv, "OK");
+
         }
         [Test]
         public void TestAbstractClassChild()
@@ -73,8 +96,22 @@ namespace ProxyGenerator.Test
             Type proxy = proxyMaker.CreateProxy();
             Mock<AbstractClassChild<int>> mock = new Mock<AbstractClassChild<int>>();
             mock.Setup(x => x.Test(10,100)).Returns("OK");
-            AbstractClassChild<int> instance = Activator.CreateInstance(proxy.MakeGenericType(typeof(int)), mock.Object) as AbstractClassChild<int>;
+            AbstractClassChild<int> instance = Activator.CreateInstance(proxy.MakeGenericType(typeof(int)), mock.Object,Array.Empty<IInterceptor>()) as AbstractClassChild<int>;
             var actualRv = instance.Test(10,100);
+            Assert.AreEqual(actualRv, "OK");
+
+        }
+        [Test]
+        public void TestAbstractClassChild_Interceptor()
+        {
+            
+            ProxyMaker proxyMaker = new ProxyMaker(typeof(AbstractClassChild<>));
+
+            Type proxy = proxyMaker.CreateProxy();
+            Mock<AbstractClassChild<int>> mock = new Mock<AbstractClassChild<int>>();
+            mock.Setup(x => x.Test(10, 100)).Returns("OK");
+            AbstractClassChild<int> instance = Activator.CreateInstance(proxy.MakeGenericType(typeof(int)), mock.Object, new IInterceptor[]{new PassThoughInterceptor()}) as AbstractClassChild<int>;
+            var actualRv = instance.Test(10, 100);
             Assert.AreEqual(actualRv, "OK");
 
         }

@@ -5,9 +5,9 @@ VisualStudioVersion = 16.0.31624.102
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProxyGenerator.Core", "ProxyGenerator.Core\ProxyGenerator.Core.csproj", "{D9B555C8-4BE5-4910-92B8-83578BC32CE1}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProxyGenerator.Test", "ProxyGenerator.Test\ProxyGenerator.Test.csproj", "{A1714844-608B-4B01-8C36-40526DF181DE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProxyGenerator.Test", "ProxyGenerator.Test\ProxyGenerator.Test.csproj", "{A1714844-608B-4B01-8C36-40526DF181DE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProxyGenerator.Benchmark", "ProxyGenerator.Benchmark\ProxyGenerator.Benchmark.csproj", "{DC671DC8-355F-407C-BF9F-D8691683FC18}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProxyGenerator.Benchmark", "ProxyGenerator.Benchmark\ProxyGenerator.Benchmark.csproj", "{DC671DC8-355F-407C-BF9F-D8691683FC18}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

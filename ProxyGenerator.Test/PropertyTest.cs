@@ -23,7 +23,18 @@ namespace ProxyGenerator.Test
             const string expectedValue = "100000";
             mock.SetupProperty(x => x.SProp, expectedValue);
             var proxyType = new ProxyMaker(typeof(IProperty)).CreateProxy();
-            var proxiedObject=Activator.CreateInstance(proxyType, mock.Object) as IProperty;
+            var proxiedObject=Activator.CreateInstance(proxyType, mock.Object, Array.Empty<IInterceptor>()) as IProperty;
+            Assert.AreEqual(expectedValue, proxiedObject.SProp);
+
+        }
+        [Test]
+        public void PropertyGetTest_Interceptor()
+        {
+            Mock<IProperty> mock = new Mock<IProperty>();
+            const string expectedValue = "100000";
+            mock.SetupProperty(x => x.SProp, expectedValue);
+            var proxyType = new ProxyMaker(typeof(IProperty)).CreateProxy();
+            var proxiedObject = Activator.CreateInstance(proxyType, mock.Object, new IInterceptor[]{new PassThoughInterceptor()}) as IProperty;
             Assert.AreEqual(expectedValue, proxiedObject.SProp);
 
         }
@@ -34,7 +45,19 @@ namespace ProxyGenerator.Test
             const string expectedValue = "100000";
             mock.SetupProperty(x => x.SProp);
             var proxyType = new ProxyMaker(typeof(IProperty)).CreateProxy();
-            var proxiedObject = Activator.CreateInstance(proxyType, mock.Object) as IProperty;
+            var proxiedObject = Activator.CreateInstance(proxyType, mock.Object, Array.Empty<IInterceptor>()) as IProperty;
+            proxiedObject.SProp = expectedValue;
+            Assert.AreEqual(expectedValue, mock.Object.SProp);
+
+        }
+        [Test]
+        public void PropertySetTest_Interceptor()
+        {
+            Mock<IProperty> mock = new Mock<IProperty>();
+            const string expectedValue = "100000";
+            mock.SetupProperty(x => x.SProp);
+            var proxyType = new ProxyMaker(typeof(IProperty)).CreateProxy();
+            var proxiedObject = Activator.CreateInstance(proxyType, mock.Object, new IInterceptor[] { new PassThoughInterceptor() }) as IProperty;
             proxiedObject.SProp = expectedValue;
             Assert.AreEqual(expectedValue, mock.Object.SProp);
 
