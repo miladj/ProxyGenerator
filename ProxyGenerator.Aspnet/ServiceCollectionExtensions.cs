@@ -19,45 +19,74 @@ namespace ProxyGenerator.Aspnet
         {
             for (var index = 0; index < serviceCollection.Count; index++)
             {
-                ServiceDescriptor descriptor = serviceCollection[index];
-                if (descriptor.ServiceType == serviceType)
-                {
-                    if(!IsOpenGeneric(descriptor.ServiceType))
-                        serviceCollection[index] = CreateNewDescriptorForFactory(descriptor,
-                            provider=>provider.GetOriginalInstanceForDecorator(descriptor,decoratorType));
-                    else
+                
+                    ServiceDescriptor descriptor = serviceCollection[index];
+                    if (AreSameType(serviceType, descriptor.ServiceType))
                     {
-                        if (descriptor.ImplementationType == null)
-                            throw new NotSupportedException("Open Generics supports only ImplementationType");
-                        Type proxy = new ProxyMakerAspnet(descriptor.ServiceType,descriptor.ImplementationType,decoratorType).CreateProxy();
-                        serviceCollection[index] =
-                            new ServiceDescriptor(descriptor.ServiceType, proxy, descriptor.Lifetime);
+                        if (IsOpenGeneric(descriptor.ServiceType))
+                        {
+                            if (descriptor.ImplementationType == null)
+                                throw new NotSupportedException("Open Generics supports only ImplementationType");
+                            Type proxy = new ProxyMakerAspnet(descriptor.ServiceType, descriptor.ImplementationType, decoratorType).CreateProxy();
+                            serviceCollection[index] =
+                                new ServiceDescriptor(descriptor.ServiceType, proxy, descriptor.Lifetime);
+                        }
+                        else
+                        {
+                            if (IsOpenGeneric(decoratorType))
+                            {
+                                try
+                                {
+                                    decoratorType =
+                                        decoratorType.MakeGenericType(descriptor.ServiceType.GenericTypeArguments);
+                                }
+                                catch (ArgumentException)
+                                {
+                                    continue;
+                                }
+                            }
+
+                            serviceCollection[index] = CreateNewDescriptorForFactory(descriptor,
+                                provider => provider.GetOriginalInstanceForDecorator(descriptor, decoratorType));
+                                
+                        }
                     }
-                }
+                
+
             }
             return serviceCollection;
         }
+
+        private static bool AreSameType(Type serviceType, Type descriptorServiceType)
+        {
+            if (descriptorServiceType == serviceType) return true;
+            return serviceType.IsGenericType && descriptorServiceType.IsGenericType &&
+                   serviceType.GetGenericTypeDefinition() == descriptorServiceType.GetGenericTypeDefinition();
+        }
+
         public static IServiceCollection Decorate(this IServiceCollection serviceCollection, Type serviceType, Type[] interceptorsType)
         {
             for (var index = 0; index < serviceCollection.Count; index++)
             {
                 ServiceDescriptor descriptor = serviceCollection[index];
-                if (descriptor.ServiceType == serviceType)
+                if (AreSameType(serviceType, descriptor.ServiceType))
                 {
-                    if (!IsOpenGeneric(descriptor.ServiceType))
+                    if (IsOpenGeneric(descriptor.ServiceType))
                     {
+                        if (descriptor.ImplementationType == null)
+                            throw new NotSupportedException("Open Generics supports only ImplementationType");
+                        Type proxy = new ProxyMakerAspnet(descriptor.ServiceType, descriptor.ImplementationType, interceptorsType).CreateProxy();
+                        serviceCollection[index] =
+                            new ServiceDescriptor(descriptor.ServiceType, proxy, descriptor.Lifetime);
+                        
+                    }
+                    else
+                    {
+
                         Type proxy = new ProxyMakerAspnet(descriptor.ServiceType).CreateProxy();
                         serviceCollection[index] = CreateNewDescriptorForFactory(descriptor,
                             provider => provider.GetOriginalInstanceForInterceptors(descriptor, proxy,
                                 interceptorsType));
-                    }
-                    else
-                    {
-                        if (descriptor.ImplementationType == null)
-                            throw new NotSupportedException("Open Generics supports only ImplementationType");
-                        Type proxy = new ProxyMakerAspnet(descriptor.ServiceType, descriptor.ImplementationType,interceptorsType).CreateProxy();
-                        serviceCollection[index] =
-                            new ServiceDescriptor(descriptor.ServiceType, proxy, descriptor.Lifetime);
                     }
                 }
             }
@@ -99,7 +128,7 @@ namespace ProxyGenerator.Aspnet
         }
         public static bool IsOpenGeneric(Type type)
         {
-            return type.IsGenericType;
+            return type.IsGenericTypeDefinition;
         }
     }
 }

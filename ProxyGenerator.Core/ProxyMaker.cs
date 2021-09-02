@@ -51,7 +51,7 @@ namespace ProxyGenerator.Core
 
             this._typeBuilder = _dynamicModule.DefineType($"MyType_{Guid.NewGuid()}", TypeAttributes.Public);
             this._typeToImplement = typeToProxy;
-            if (_typeToImplement.IsGenericType)
+            if (_typeToImplement.IsGenericTypeDefinition)
             {
                 _genericArguments = _typeToImplement.GetGenericArguments();
                 this._defineGenericParameters = _typeBuilder.DefineGenericParameters(Enumerable.Range(0, _genericArguments.Length).Select(x => "T" + x)
@@ -426,7 +426,7 @@ namespace ProxyGenerator.Core
                     if (array.Length > 0)
                         methodInfo = methodInfo.MakeGenericMethod(array);
                 }
-                if (_typeToProxy.IsGenericType)
+                if (_typeToProxy.IsGenericTypeDefinition)
                 {
                     Type[] genericArguments = targetFieldType.GetGenericArguments();
                     for (var i = 0; i < genericArguments.Length; i++)
