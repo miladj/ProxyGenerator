@@ -62,14 +62,14 @@ namespace ProxyGenerator.Core
             ILGenerator ilGenerator = constructorBuilder.GetILGenerator();
             ilGenerator.DeclareLocal(_typeToImplement);
 
-            CallObjectAsBaseConstuctor(ilGenerator);
+            ilGenerator.CallObjectCtorAsBaseCtor();
 
             ilGenerator.Emit(OpCodes.Ldarg_0);
             ilGenerator.Emit(OpCodes.Ldarg_1);
             ilGenerator.Emit(OpCodes.Stfld, _serviceProviderField);
 
             
-            MethodInfo activatorCreateInstanceUtilites = typeof(Microsoft.Extensions.DependencyInjection.ActivatorUtilities).GetMethods().First(x => !x.IsGenericMethod);
+            
 
             ilGenerator.Emit(OpCodes.Ldarg_0);
 
@@ -77,7 +77,7 @@ namespace ProxyGenerator.Core
             ilGenerator.Emit(OpCodes.Ldtoken, _implementType);
             ilGenerator.Emit(OpCodes.Call, ReflectionStaticValue.Type_GetTypeFromHandle);
             ilGenerator.Emit(OpCodes.Call, ReflectionStaticValue.Array_Empty_OfObjet);
-            ilGenerator.Emit(OpCodes.Call, activatorCreateInstanceUtilites);
+            ilGenerator.Emit(OpCodes.Call, ReflectionStaticValue.ActivatorCreateInstanceUtilities);
             ilGenerator.Emit(OpCodes.Isinst, _typeToImplement);
             if (_decoratorType != null)
             {
@@ -86,12 +86,12 @@ namespace ProxyGenerator.Core
                 ilGenerator.Emit(OpCodes.Ldarg_1);
                 ilGenerator.Emit(OpCodes.Ldtoken, _decoratorType);
                 ilGenerator.Emit(OpCodes.Call, ReflectionStaticValue.Type_GetTypeFromHandle);
-                ilGenerator.CreateArray<object>(1);
+                ilGenerator.CreateArray(ReflectionStaticValue.TypeObject,1);
                 ilGenerator.Emit(OpCodes.Dup);
                 ilGenerator.Emit(OpCodes.Ldc_I4_0);
                 ilGenerator.Emit(OpCodes.Ldloc_0);
                 ilGenerator.Emit(OpCodes.Stelem_Ref);
-                ilGenerator.Emit(OpCodes.Call, activatorCreateInstanceUtilites);
+                ilGenerator.Emit(OpCodes.Call, ReflectionStaticValue.ActivatorCreateInstanceUtilities);
                 ilGenerator.Emit(OpCodes.Isinst, _typeToImplement);
             }
             ilGenerator.Emit(OpCodes.Stfld, _fieldBuilder);
@@ -100,13 +100,7 @@ namespace ProxyGenerator.Core
             {
                 FillInterceptorFieldWithServiceProvider(ilGenerator);
             }
-            else
-            {
-                MethodInfo createEmptyInterceptorArrayMethod = typeof(Array).GetMethod(nameof(Array.Empty))!.MakeGenericMethod(typeof(IInterceptor));
-                ilGenerator.Emit(OpCodes.Ldarg_0);
-                ilGenerator.Emit(OpCodes.Call, createEmptyInterceptorArrayMethod);
-                ilGenerator.Emit(OpCodes.Stfld, _interceptorsField);
-            }
+            
 
             ilGenerator.Emit(OpCodes.Ret);
         }

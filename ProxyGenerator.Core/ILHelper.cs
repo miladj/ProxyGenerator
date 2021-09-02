@@ -9,9 +9,42 @@ namespace ProxyGenerator.Core
 {
     public static class ILHelper
     {
-        public static void CreateArray<T>(this ILGenerator ilGenerator, uint size)
+        public static void Ldarg(this ILGenerator ilGenerator,int argNum)
         {
-            switch (size)
+            switch (argNum)
+            {
+                case 0:
+                    ilGenerator.Emit(OpCodes.Ldarg_0);
+                    break;
+                case 1:
+                    ilGenerator.Emit(OpCodes.Ldarg_1);
+                    break;
+                case 2:
+                    ilGenerator.Emit(OpCodes.Ldarg_2);
+                    break;
+                case 3:
+                    ilGenerator.Emit(OpCodes.Ldarg_3);
+                    break;
+                default:
+                    ilGenerator.Emit(OpCodes.Ldarg, argNum);
+                    break;
+            }
+        }
+        public static void CallObjectCtorAsBaseCtor(this ILGenerator ilGenerator)
+        {
+            ilGenerator.Emit(OpCodes.Ldarg_0);
+            ilGenerator.Emit(OpCodes.Call, ReflectionStaticValue.Object_Constructor);
+        }
+        public static void CreateArray(this ILGenerator ilGenerator, Type arrayType, int size)
+        {
+            ilGenerator.Ldc_I4(size);
+
+            ilGenerator.Emit(OpCodes.Newarr, arrayType);
+        }
+
+        public static void Ldc_I4(this ILGenerator ilGenerator, int value)
+        {
+            switch (value)
             {
                 case 0:
                     ilGenerator.Emit(OpCodes.Ldc_I4_0);
@@ -41,11 +74,9 @@ namespace ProxyGenerator.Core
                     ilGenerator.Emit(OpCodes.Ldc_I4_8);
                     break;
                 default:
-                    ilGenerator.Emit(OpCodes.Ldc_I4,size);
+                    ilGenerator.Emit(OpCodes.Ldc_I4, value);
                     break;
             }
-            
-            ilGenerator.Emit(OpCodes.Newarr, typeof(object));
         }
     }
 }

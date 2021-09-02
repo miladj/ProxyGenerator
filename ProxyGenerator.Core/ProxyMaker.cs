@@ -9,6 +9,17 @@ namespace ProxyGenerator.Core
 {
     public class ProxyMaker
     {
+        private static class AssemblyMaker
+        {
+            public static readonly AssemblyBuilder ProxyAssemblyBuilder;
+            public static readonly ModuleBuilder ProxyModuleBuilder;
+
+            static AssemblyMaker()
+            {
+                ProxyAssemblyBuilder = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName("DynamicProxy"), AssemblyBuilderAccess.Run);
+                ProxyModuleBuilder = ProxyAssemblyBuilder.DefineDynamicModule("DynamicModule");
+            }
+        }
         private readonly Type _typeToProxy;
         protected readonly Type[] _interceptorTypes;
         private readonly bool _useServiceProvider;
@@ -19,8 +30,8 @@ namespace ProxyGenerator.Core
         protected readonly FieldBuilder _serviceProviderField;
         protected readonly GenericTypeParameterBuilder[] _defineGenericParameters;
         private Type[] _genericArguments;
-        private ModuleBuilder _dynamicModule;
-        private AssemblyBuilder _defineDynamicAssembly;
+        private ModuleBuilder _dynamicModule= AssemblyMaker.ProxyModuleBuilder;
+        private AssemblyBuilder _defineDynamicAssembly= AssemblyMaker.ProxyAssemblyBuilder;
         protected bool _generateInterceptorPart = true;
         protected bool IsBaseTypeInterface { get; }
 
@@ -37,14 +48,8 @@ namespace ProxyGenerator.Core
             this._typeToProxy = typeToProxy;
             this._interceptorTypes = interceptorTypes;
             _useServiceProvider = useServiceProvider;
-            
 
-            _defineDynamicAssembly = AssemblyBuilder.DefineDynamicAssembly(new AssemblyName("salam"), AssemblyBuilderAccess.Run);
-            ModuleBuilder defineDynamicModule = _defineDynamicAssembly.DefineDynamicModule("MyModule");
-
-
-            _dynamicModule = defineDynamicModule;
-            this._typeBuilder = _dynamicModule.DefineType("MyType", TypeAttributes.Public);
+            this._typeBuilder = _dynamicModule.DefineType($"MyType_{Guid.NewGuid()}", TypeAttributes.Public);
             this._typeToImplement = typeToProxy;
             if (_typeToImplement.IsGenericType)
             {
@@ -77,7 +82,7 @@ namespace ProxyGenerator.Core
             }
             
 
-            InternalCreateType();
+            
         }
 
         protected void GenerateNewObj(ILGenerator ilGenerator,Type type)
@@ -96,14 +101,9 @@ namespace ProxyGenerator.Core
         }
         public Type CreateProxy()
         {
+            InternalCreateType();
             CreateConstructor();
             Type proxy = _typeBuilder.CreateType();
-            
-            var gr = new Lokad.ILPack.AssemblyGenerator();
-            
-            gr.GenerateAssembly(_defineDynamicAssembly,new Assembly[]{ _nestedTypeAssembly }, "a.dll");
-            // gr.GenerateAssembly(_nestedTypeAssembly,new Assembly[]{typeof(IDefaultInvocation).Assembly}, "b.dll");
-
             
             return proxy;
         }
@@ -118,7 +118,7 @@ namespace ProxyGenerator.Core
                         ReflectionStaticValue.TypeIServiceProvider
                     });
                 ILGenerator ilGenerator = constructorBuilder.GetILGenerator();
-                CallObjectAsBaseConstuctor(ilGenerator);
+                ilGenerator.CallObjectCtorAsBaseCtor();
 
                 ilGenerator.Emit(OpCodes.Ldarg_0);
                 ilGenerator.Emit(OpCodes.Ldarg_1);
@@ -141,7 +141,7 @@ namespace ProxyGenerator.Core
                     });
                 
                 ILGenerator ilGenerator = constructorBuilder.GetILGenerator();
-                CallObjectAsBaseConstuctor(ilGenerator);
+                ilGenerator.CallObjectCtorAsBaseCtor();
 
                 ilGenerator.Emit(OpCodes.Ldarg_0);
                 ilGenerator.Emit(OpCodes.Ldarg_1);
@@ -157,22 +157,17 @@ namespace ProxyGenerator.Core
             }
         }
 
-        protected static void CallObjectAsBaseConstuctor(ILGenerator ilGenerator)
-        {
-            ilGenerator.Emit(OpCodes.Ldarg_0);
-            ilGenerator.Emit(OpCodes.Call, ReflectionStaticValue.Object_Constructor);
-        }
+        
 
         protected void FillInterceptorFieldWithServiceProvider(ILGenerator ilGenerator)
         {
             ilGenerator.Emit(OpCodes.Ldarg_0);
-            ilGenerator.Emit(OpCodes.Ldc_I4, _interceptorTypes.Length);
-            ilGenerator.Emit(OpCodes.Newarr, ReflectionStaticValue.TypeIInterceptor);
+            ilGenerator.CreateArray(ReflectionStaticValue.TypeIInterceptor, _interceptorTypes.Length);
             ilGenerator.Emit(OpCodes.Dup);
             for (var index = 0; index < _interceptorTypes.Length; index++)
             {
                 Type type = _interceptorTypes[index];
-                ilGenerator.Emit(OpCodes.Ldc_I4, index);
+                ilGenerator.Ldc_I4(index);
                 GenerateNewObj(ilGenerator, type);
                 ilGenerator.Emit(OpCodes.Stelem_Ref);
                 if (index != _interceptorTypes.Length - 1)
@@ -259,38 +254,19 @@ namespace ProxyGenerator.Core
 
                     // generator.EmitWriteLine("Interceptor 0");
                     //Set Arguments
-                    generator.Emit(OpCodes.Ldc_I4, newMethodParameterTypes.Length);
-                    generator.Emit(OpCodes.Newarr, ReflectionStaticValue.TypeObject);
+                    generator.CreateArray(ReflectionStaticValue.TypeObject, newMethodParameterTypes.Length);
+                    
                     if (newMethodParameterTypes.Length > 0)
                     {
                         generator.Emit(OpCodes.Dup);
                         for (var i = 1; i <= newMethodParameterTypes.Length; i++)
                         {
 
-                            generator.Emit(OpCodes.Ldc_I4_S, i - 1);
-                            switch (i)
-                            {
-                                case 1:
-                                    generator.Emit(OpCodes.Ldarg_1);
-                                    break;
-                                case 2:
-                                    generator.Emit(OpCodes.Ldarg_2);
-                                    break;
-                                case 3:
-                                    generator.Emit(OpCodes.Ldarg_3);
-                                    break;
-                                default:
-                                    generator.Emit(OpCodes.Ldarg, i);
-                                    break;
-                            }
+                            generator.Ldc_I4(i - 1);
+                            generator.Ldarg(i);
 
                             Type parameterType = newMethodParameterTypes[i - 1];
-                            if (parameterType.IsValueType)
-                            {
-                                generator.Emit(OpCodes.Box, parameterType);
-                            }
-
-                            if (parameterType.IsGenericParameter)
+                            if (parameterType.IsValueType || parameterType.IsGenericParameter)
                             {
                                 generator.Emit(OpCodes.Box, parameterType);
                             }
@@ -351,19 +327,7 @@ namespace ProxyGenerator.Core
 
                         for (var i = 1; i <= methodParameters.Length; i++)
                         {
-                            if (i <= 3)
-                            {
-                                generator.Emit(i switch
-                                {
-                                    1 => OpCodes.Ldarg_1,
-                                    2 => OpCodes.Ldarg_2,
-                                    3 => OpCodes.Ldarg_3
-                                });
-                            }
-                            else
-                            {
-                                generator.Emit(OpCodes.Ldarg, i);
-                            }
+                            generator.Ldarg(i);
 
                             if (typeArguments.Length > 0)
                                 generator.Emit(OpCodes.Stfld, TypeBuilder.GetField(makeGenericType, fbs[i]));
@@ -395,19 +359,7 @@ namespace ProxyGenerator.Core
                 
                 for (var i = 1; i <= methodParameters.Length; i++)
                 {
-                    if (i <= 3)
-                    {
-                        generator.Emit(i switch
-                        {
-                            1 => OpCodes.Ldarg_1,
-                            2 => OpCodes.Ldarg_2,
-                            3 => OpCodes.Ldarg_3
-                        });
-                    }
-                    else
-                    {
-                        generator.Emit(OpCodes.Ldarg, i);
-                    }
+                    generator.Ldarg(i);
                 }
                 
                 generator.Emit(OpCodes.Callvirt, methodInfo);
@@ -418,20 +370,13 @@ namespace ProxyGenerator.Core
             }
         }
 
-        private AssemblyBuilder _nestedTypeAssembly;
-        private ModuleBuilder _nestedTypesModule;
+        
         private Type CreateNestedType(ParameterInfo[] methodParameters2, MethodInfo methodInfo, out FieldBuilder[] fb, out ConstructorBuilder defineDefaultConstructor)
         {
-            if (_nestedTypeAssembly == null)
-            {
-                _nestedTypeAssembly =
-                    AssemblyBuilder.DefineDynamicAssembly(new AssemblyName("salam2123" ),
-                        AssemblyBuilderAccess.Run);
-                _nestedTypesModule = _nestedTypeAssembly.DefineDynamicModule("MyModule12323" + Guid.NewGuid());
-            }
+            
 
             
-            TypeBuilder defineNestedType = _nestedTypesModule.DefineType($"MT__{methodInfo.Name}_{Guid.NewGuid()}",  TypeAttributes.Public);
+            TypeBuilder defineNestedType = _dynamicModule.DefineType($"MT__{methodInfo.Name}_{Guid.NewGuid()}",  TypeAttributes.Public);
 
             Type targetFieldType = _typeToProxy;
 
@@ -532,16 +477,11 @@ namespace ProxyGenerator.Core
             if (methodInfo.ReturnType == ReflectionStaticValue.TypeVoid)
                 ilGenerator.Emit(OpCodes.Ldnull);
             ilGenerator.Emit(OpCodes.Ret);
-            MethodInfo methodInfoDeclaration = ReflectionStaticValue.TypeIDefaultInvocation.GetMethods()[0];
-            // defineNestedType.DefineMethodOverride(defineMethod, methodInfoDeclaration); 
+            
             defineNestedType.CreateType();
-            var gr = new Lokad.ILPack.AssemblyGenerator();
-            gr.GenerateAssembly(_nestedTypeAssembly, "b"+ methodInfo.Name + ".dll");
-            // Type makeGenericType = defineNestedType.MakeGenericType(typeof(string),typeof(string));
-            // FieldInfo fieldInfo = TypeBuilder.GetField(makeGenericType,fb[0]);
+            
             return defineNestedType;
-            // return defineNestedType;
-
+            
         }
     }
 }
