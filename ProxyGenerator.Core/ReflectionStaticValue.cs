@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace ProxyGenerator.Core
 {
-    public static class ReflectionStaticValue
+    public static partial class ReflectionStaticValue
     {
         #region Types
 
