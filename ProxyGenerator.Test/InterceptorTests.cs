@@ -31,8 +31,8 @@ namespace ProxyGenerator.Test
         {
             
             var mock = new Mock<ITestInterceptor>();
-
-            Type proxy = new Core.ProxyMaker(typeof(ITestInterceptor)).CreateProxy();
+            
+            Type proxy = ProxyMaker.CreateProxyType(typeof(ITestInterceptor));
             var instance = Activator.CreateInstance(proxy, mock.Object,new []{new PassThroughInterceptor()}) as ITestInterceptor;
             
             instance!.Test(78);
@@ -52,7 +52,7 @@ namespace ProxyGenerator.Test
             sc.AddSingleton<PassThroughInterceptor>(interceptorMock.Object);
             ServiceProvider buildServiceProvider = sc.BuildServiceProvider();
 
-            Type proxy = new Core.ProxyMaker(typeof(ITestInterceptor), new[] { typeof(PassThroughInterceptor) }).CreateProxy();
+            Type proxy = Core.ProxyMaker.CreateProxyTypeUseIServiceProvider(typeof(ITestInterceptor), new[] { typeof(PassThroughInterceptor) });
             
             var instance = Activator.CreateInstance(proxy, buildServiceProvider) as ITestInterceptor;
 
@@ -68,7 +68,7 @@ namespace ProxyGenerator.Test
             var mock = new Mock<ITestInterceptor>();
             const string expectedRv = "OK";
             mock.Setup(x => x.Test(90, 1200)).Returns(expectedRv);
-            Type proxy = new Core.ProxyMaker(typeof(ITestInterceptor)).CreateProxy();
+            Type proxy = ProxyMaker.CreateProxyType(typeof(ITestInterceptor));
             var instance = Activator.CreateInstance(proxy, mock.Object,Array.Empty<IInterceptor>()) as ITestInterceptor;
 
             var actualRv=instance!.Test(90,1200);
@@ -89,8 +89,8 @@ namespace ProxyGenerator.Test
             sc.AddSingleton(typeof(ITestInterceptor), mock.Object);
             sc.AddSingleton<PassThroughInterceptor>(interceptorMock.Object);
             ServiceProvider buildServiceProvider = sc.BuildServiceProvider();
-
-            Type proxy = new Core.ProxyMaker(typeof(ITestInterceptor), new[] { typeof(PassThroughInterceptor) }).CreateProxy();
+            
+            Type proxy = ProxyMaker.CreateProxyTypeUseIServiceProvider(typeof(ITestInterceptor), new[] { typeof(PassThroughInterceptor) });
 
             var instance = Activator.CreateInstance(proxy, buildServiceProvider) as ITestInterceptor;
 
@@ -114,7 +114,7 @@ namespace ProxyGenerator.Test
             sc.AddSingleton<PassThroughInterceptor>(interceptorMock.Object);
             ServiceProvider buildServiceProvider = sc.BuildServiceProvider();
 
-            Type proxy = new Core.ProxyMaker(typeof(ITestInterceptor), new[] { typeof(PassThroughInterceptor) }).CreateProxy();
+            Type proxy = ProxyMaker.CreateProxyTypeUseIServiceProvider(typeof(ITestInterceptor), new[] { typeof(PassThroughInterceptor) });
 
             var instance = Activator.CreateInstance(proxy, buildServiceProvider) as ITestInterceptor;
 

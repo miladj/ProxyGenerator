@@ -43,7 +43,7 @@ namespace ProxyGenerator.Test
         public void VoidZeroParameterMethod()
         {
             var mock = new Moq.Mock<IGeneric<string>>();
-            Type proxy = new Core.ProxyMaker(typeof(IGeneric<>)).CreateProxy();
+            Type proxy = ProxyMaker.CreateProxyType(typeof(IGeneric<>));
             var createdObjectFromProxy = Activator.CreateInstance(proxy.MakeGenericType(typeof(string)), mock.Object, new []{new PassThroughInterceptor()}) as IGeneric<string>;
             Assert.NotNull(createdObjectFromProxy);
             createdObjectFromProxy.Test();
@@ -53,7 +53,7 @@ namespace ProxyGenerator.Test
         public void VoidReturnGenericParameterMethod()
         {
             var mock = new Moq.Mock<IGeneric2<string>>();
-            Type proxy = new Core.ProxyMaker(typeof(IGeneric2<>)).CreateProxy();
+            Type proxy = ProxyMaker.CreateProxyType(typeof(IGeneric2<>));
             var createdObjectFromProxy = Activator.CreateInstance(proxy.MakeGenericType(typeof(string)), mock.Object, new []{new PassThroughInterceptor()}) as IGeneric2<string>;
             Assert.NotNull(createdObjectFromProxy);
             createdObjectFromProxy.Test("Hello");
@@ -65,7 +65,7 @@ namespace ProxyGenerator.Test
             var mock = new Moq.Mock<IGeneric3<string>>();
             const string expectedRv = "GenericReturn";
             mock.Setup(x => x.Test()).Returns(expectedRv);
-            Type proxy = new Core.ProxyMaker(typeof(IGeneric3<>)).CreateProxy();
+            Type proxy = ProxyMaker.CreateProxyType(typeof(IGeneric3<>));
             var createdObjectFromProxy = Activator.CreateInstance(proxy.MakeGenericType(typeof(string)), mock.Object, new []{new PassThroughInterceptor()}) as IGeneric3<string>;
             Assert.NotNull(createdObjectFromProxy);
             string actualRv = createdObjectFromProxy.Test();
@@ -78,7 +78,7 @@ namespace ProxyGenerator.Test
             var mock = new Moq.Mock<IGeneric4<string>>();
 
 
-            Type proxy = new Core.ProxyMaker(typeof(IGeneric4<>)).CreateProxy();
+            Type proxy = ProxyMaker.CreateProxyType(typeof(IGeneric4<>));
             var createdObjectFromProxy = Activator.CreateInstance(proxy.MakeGenericType(typeof(string)), mock.Object, Array.Empty<IInterceptor>()) as IGeneric4<string>;
 
             Assert.NotNull(createdObjectFromProxy);
@@ -92,7 +92,7 @@ namespace ProxyGenerator.Test
             var mock = new Moq.Mock<IGeneric4<string>>();
             
             
-            Type proxy = new Core.ProxyMaker(typeof(IGeneric4<>)).CreateProxy();
+            Type proxy = ProxyMaker.CreateProxyType(typeof(IGeneric4<>));
             var createdObjectFromProxy = Activator.CreateInstance(proxy.MakeGenericType(typeof(string)), mock.Object, new []{new PassThroughInterceptor()}) as IGeneric4<string>;
             
             Assert.NotNull(createdObjectFromProxy);
@@ -105,7 +105,7 @@ namespace ProxyGenerator.Test
             var mock = new Moq.Mock<IGeneric5<string>>();
             mock.Setup(x => x.Test<int>("Hello")).Returns("Hello");
 
-            Type proxy = new Core.ProxyMaker(typeof(IGeneric5<>)).CreateProxy();
+            Type proxy = ProxyMaker.CreateProxyType(typeof(IGeneric5<>));
             var createdObjectFromProxy = Activator.CreateInstance(proxy.MakeGenericType(typeof(string)), mock.Object, new []{new PassThroughInterceptor()}) as IGeneric5<string>;
             Assert.NotNull(createdObjectFromProxy);
             Assert.AreEqual("Hello",createdObjectFromProxy.Test<int>("Hello"));
@@ -116,7 +116,7 @@ namespace ProxyGenerator.Test
             var mock = new Moq.Mock<IGeneric6<string>>();
 
             mock.Setup(x => x.Test(10, "Hello")).Returns(1000);
-            Type proxy = new Core.ProxyMaker(typeof(IGeneric6<>)).CreateProxy();
+            Type proxy = ProxyMaker.CreateProxyType(typeof(IGeneric6<>));
             var createdObjectFromProxy = Activator.CreateInstance(proxy.MakeGenericType(typeof(string)), mock.Object,Array.Empty<IInterceptor>()/*, new []{new InterceptorTests.M()}*/) as IGeneric6<string>;
             Assert.NotNull(createdObjectFromProxy);
             int genericMethod3 = createdObjectFromProxy.Test<int>(10,"Hello");
@@ -128,7 +128,7 @@ namespace ProxyGenerator.Test
             var mock = new Moq.Mock<IGeneric6<string>>();
 
             mock.Setup(x => x.Test(10, "Hello")).Returns(1000);
-            Type proxy = new Core.ProxyMaker(typeof(IGeneric6<>)).CreateProxy();
+            Type proxy = ProxyMaker.CreateProxyType(typeof(IGeneric6<>));
             var createdObjectFromProxy = Activator.CreateInstance(proxy.MakeGenericType(typeof(string)), mock.Object, new []{new PassThroughInterceptor()}) as IGeneric6<string>;
             Assert.NotNull(createdObjectFromProxy);
             int genericMethod3 = createdObjectFromProxy.Test<int>(10, "Hello");
@@ -140,7 +140,7 @@ namespace ProxyGenerator.Test
             var mock = new Moq.Mock<IGeneric7<string>>();
 
             
-            Type proxy = new Core.ProxyMaker(typeof(IGeneric7<>)).CreateProxy();
+            Type proxy = ProxyMaker.CreateProxyType(typeof(IGeneric7<>));
             var createdObjectFromProxy = Activator.CreateInstance(proxy.MakeGenericType(typeof(string)), mock.Object, Array.Empty<IInterceptor>()) as IGeneric7<string>;
             Assert.NotNull(createdObjectFromProxy);
             createdObjectFromProxy.Test( "Hello");
@@ -152,7 +152,7 @@ namespace ProxyGenerator.Test
             var mock = new Moq.Mock<IGeneric7<string>>();
 
 
-            Type proxy = new Core.ProxyMaker(typeof(IGeneric7<>)).CreateProxy();
+            Type proxy = ProxyMaker.CreateProxyType(typeof(IGeneric7<>));
             var createdObjectFromProxy = Activator.CreateInstance(proxy.MakeGenericType(typeof(string)), mock.Object, new[] { new PassThroughInterceptor() }) as IGeneric7<string>;
             Assert.NotNull(createdObjectFromProxy);
             createdObjectFromProxy.Test("Hello");

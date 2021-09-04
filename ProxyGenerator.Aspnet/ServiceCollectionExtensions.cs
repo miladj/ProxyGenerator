@@ -24,7 +24,7 @@ namespace ProxyGenerator.Aspnet
                         {
                             if (descriptor.ImplementationType == null)
                                 throw new NotSupportedException("Open Generics supports only ImplementationType");
-                            Type proxy = new ProxyMakerAspnet(descriptor.ServiceType, descriptor.ImplementationType, decoratorType).CreateProxy();
+                            Type proxy = ProxyMakerAspnet.CreateProxyTypeWithDecorator(descriptor.ServiceType, descriptor.ImplementationType, decoratorType);
                             serviceCollection[index] =
                                 new ServiceDescriptor(descriptor.ServiceType, proxy, descriptor.Lifetime);
                         }
@@ -72,14 +72,14 @@ namespace ProxyGenerator.Aspnet
                     {
                         if (descriptor.ImplementationType == null)
                             throw new NotSupportedException("Open Generics supports only ImplementationType");
-                        Type proxy = new ProxyMakerAspnet(descriptor.ServiceType, descriptor.ImplementationType, interceptorsType).CreateProxy();
+                        Type proxy = ProxyMakerAspnet.CreateProxyTypeWithInterceptors(descriptor.ServiceType, descriptor.ImplementationType, interceptorsType);
                         serviceCollection[index] =
                             new ServiceDescriptor(descriptor.ServiceType, proxy, descriptor.Lifetime);
                     }
                     else
                     {
 
-                        Type proxy = new ProxyMakerAspnet(descriptor.ServiceType).CreateProxy();
+                        Type proxy = ProxyMakerAspnet.CreateProxyType(descriptor.ServiceType);
                         serviceCollection[index] = CreateNewDescriptorForFactory(descriptor,
                             provider => provider.GetOriginalInstanceForInterceptors(descriptor, proxy,
                                 interceptorsType));

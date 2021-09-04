@@ -13,7 +13,7 @@ namespace ProxyGenerator.Benchmark
         public void Setup()
         {
             _manualCreatedInstance = new Proxy(new DefaultImpl(),new PassThoughInterceptor());
-            _generatedProxyInstance = Activator.CreateInstance(new ProxyMaker(typeof(ITest)).CreateProxy(),
+            _generatedProxyInstance = Activator.CreateInstance(ProxyMaker.CreateProxyType(typeof(ITest)),
                 new DefaultImpl(), new IInterceptor[] {new PassThoughInterceptor()}) as ITest;
         }
         public class PassThoughInterceptor : IInterceptor

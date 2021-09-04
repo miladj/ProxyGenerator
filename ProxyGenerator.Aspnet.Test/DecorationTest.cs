@@ -49,18 +49,23 @@ namespace ProxyGenerator.Aspnet.Test
             return "OK";
         }
     }
+
+    public interface IService { }
+    public class Service:IService{}
     public class SimpleDecorator<T> : ISimple<T>
     {
-        private readonly ISimple<T> _service;
+        private readonly ISimple<T> _original;
+        private IService _service;
 
-        public SimpleDecorator(ISimple<T> service)
+        public SimpleDecorator(ISimple<T> original,IService service)
         {
             _service = service;
+            _original = original;
         }
 
         public string Test()
         {
-            return _service.Test();
+            return _original.Test();
         }
     }
 
@@ -105,6 +110,7 @@ namespace ProxyGenerator.Aspnet.Test
         {
             IServiceProvider serviceCollection = CreateServiceCollection(services =>
             {
+                services.AddTransient<IService, Service>();
                 services.AddTransient(typeof(ISimple<int>), typeof(Simple<int>));
                 services.Decorate(typeof(ISimple<>), typeof(SimpleDecorator<>));
             });
@@ -145,6 +151,7 @@ namespace ProxyGenerator.Aspnet.Test
         {
             IServiceProvider serviceCollection = CreateServiceCollection(services =>
             {
+                services.AddTransient<IService, Service>();
                 services.AddTransient(typeof(ISimple<>), typeof(Simple<>));
                 services.Decorate(typeof(ISimple<>), typeof(SimpleDecorator<>));
             });

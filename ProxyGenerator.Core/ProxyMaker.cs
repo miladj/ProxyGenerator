@@ -6,7 +6,7 @@ using System.Reflection.Emit;
 
 namespace ProxyGenerator.Core
 {
-    public class ProxyMaker
+    public partial class ProxyMaker
     {
         private static class AssemblyMaker
         {
@@ -34,11 +34,11 @@ namespace ProxyGenerator.Core
         protected bool _generateInterceptorPart = true;
         protected bool IsBaseTypeInterface { get; }
 
-        public ProxyMaker(Type typeToProxy, Type[] interceptorTypes ):this(typeToProxy,interceptorTypes,true)
+        protected ProxyMaker(Type typeToProxy, Type[] interceptorTypes ):this(typeToProxy,interceptorTypes,true)
         {
 
         }
-        public ProxyMaker(Type typeToProxy) : this(typeToProxy,null,  false)
+        protected ProxyMaker(Type typeToProxy) : this(typeToProxy,null,  false)
         {
 
         }

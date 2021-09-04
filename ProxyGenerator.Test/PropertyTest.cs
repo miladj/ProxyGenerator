@@ -17,7 +17,7 @@ namespace ProxyGenerator.Test
             Mock<IProperty> mock = new Mock<IProperty>();
             const string expectedValue = "100000";
             mock.SetupProperty(x => x.SProp, expectedValue);
-            var proxyType = new ProxyMaker(typeof(IProperty)).CreateProxy();
+            var proxyType = ProxyMaker.CreateProxyType(typeof(IProperty));
             var proxiedObject=Activator.CreateInstance(proxyType, mock.Object, Array.Empty<IInterceptor>()) as IProperty;
             Assert.AreEqual(expectedValue, proxiedObject.SProp);
 
@@ -28,7 +28,7 @@ namespace ProxyGenerator.Test
             Mock<IProperty> mock = new Mock<IProperty>();
             const string expectedValue = "100000";
             mock.SetupProperty(x => x.SProp, expectedValue);
-            var proxyType = new ProxyMaker(typeof(IProperty)).CreateProxy();
+            var proxyType = ProxyMaker.CreateProxyType(typeof(IProperty));
             var proxiedObject = Activator.CreateInstance(proxyType, mock.Object, new IInterceptor[]{new PassThroughInterceptor()}) as IProperty;
             Assert.AreEqual(expectedValue, proxiedObject.SProp);
 
@@ -39,7 +39,7 @@ namespace ProxyGenerator.Test
             Mock<IProperty> mock = new Mock<IProperty>();
             const string expectedValue = "100000";
             mock.SetupProperty(x => x.SProp);
-            var proxyType = new ProxyMaker(typeof(IProperty)).CreateProxy();
+            var proxyType = ProxyMaker.CreateProxyType(typeof(IProperty));
             var proxiedObject = Activator.CreateInstance(proxyType, mock.Object, Array.Empty<IInterceptor>()) as IProperty;
             proxiedObject.SProp = expectedValue;
             Assert.AreEqual(expectedValue, mock.Object.SProp);
@@ -51,7 +51,7 @@ namespace ProxyGenerator.Test
             Mock<IProperty> mock = new Mock<IProperty>();
             const string expectedValue = "100000";
             mock.SetupProperty(x => x.SProp);
-            var proxyType = new ProxyMaker(typeof(IProperty)).CreateProxy();
+            var proxyType = ProxyMaker.CreateProxyType((typeof(IProperty)));
             var proxiedObject = Activator.CreateInstance(proxyType, mock.Object, new IInterceptor[] { new PassThroughInterceptor() }) as IProperty;
             proxiedObject.SProp = expectedValue;
             Assert.AreEqual(expectedValue, mock.Object.SProp);

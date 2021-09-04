@@ -2,23 +2,24 @@
 using System.Reflection;
 using System.Reflection.Emit;
 using Microsoft.Extensions.DependencyInjection;
+using ProxyGenerator.Core;
 
-namespace ProxyGenerator.Core
+namespace ProxyGenerator.Aspnet
 {
-    public class ProxyMakerAspnet : ProxyMaker
+    public partial class ProxyMakerAspnet : ProxyMaker
     {
         private Type _implementType=null;
         private Type _decoratorType = null;
-        public ProxyMakerAspnet(Type typeToProxy) : base(typeToProxy, Array.Empty<Type>(), false)
+        protected ProxyMakerAspnet(Type typeToProxy) : base(typeToProxy, Array.Empty<Type>(), false)
         {
         }
 
-        public ProxyMakerAspnet(Type typeToProxy, Type implementType, Type[] interceptorTypes) : base(typeToProxy, interceptorTypes, true)
+        protected ProxyMakerAspnet(Type typeToProxy, Type implementType, Type[] interceptorTypes) : base(typeToProxy, interceptorTypes, true)
         {
             this._implementType = implementType;
             this._decoratorType = null;
         }
-        public ProxyMakerAspnet(Type typeToProxy, Type implementType, Type decoratorType) : base(typeToProxy, Array.Empty<Type>(), true)
+        protected ProxyMakerAspnet(Type typeToProxy, Type implementType, Type decoratorType) : base(typeToProxy, Array.Empty<Type>(), true)
         {
             this._implementType = implementType;
             this._decoratorType = decoratorType;

@@ -13,9 +13,10 @@ namespace ProxyGenerator.Benchmark
         [GlobalSetup]
         public void Setup()
         {
-            _generatedProxyType = new ProxyMaker(typeof(ITest)).CreateProxy();
-            _expressionTreeConstruct = Expression.Lambda<Func<ITest>>(Expression.New(_generatedProxyType.GetConstructors()[0],
-                Expression.New(typeof(DefaultImpl)))).Compile();
+            _generatedProxyType = ProxyMaker.CreateProxyType(typeof(ITest));
+            Expression<Func<ITest>> expression = Expression.Lambda<Func<ITest>>(Expression.New(_generatedProxyType.GetConstructors()[0],
+                Expression.New(typeof(DefaultImpl)),Expression.Constant(Array.Empty<IInterceptor>())));
+            _expressionTreeConstruct = expression.Compile();
         }
         public interface ITest
         {
@@ -44,7 +45,7 @@ namespace ProxyGenerator.Benchmark
         [Benchmark]
         public void ManualCreateObject() => new CompileTimeProxy(new DefaultImpl()).Test();
         [Benchmark]
-        public void ProxyInstantiateByActivator() => (Activator.CreateInstance(_generatedProxyType, new DefaultImpl()) as ITest)!.Test();
+        public void ProxyInstantiateByActivator() => (Activator.CreateInstance(_generatedProxyType, new DefaultImpl(),Array.Empty<IInterceptor>()) as ITest)!.Test();
         [Benchmark]
         public void ProxyInstantiateByExpressionTree() => _expressionTreeConstruct().Test();
     }
