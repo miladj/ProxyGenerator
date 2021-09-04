@@ -1,5 +1,4 @@
 using System;
-using System.Reflection;
 using Moq;
 using NUnit.Framework;
 using ProxyGenerator.Core;
