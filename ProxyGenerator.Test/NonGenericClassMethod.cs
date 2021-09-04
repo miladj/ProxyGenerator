@@ -30,7 +30,7 @@ namespace ProxyGenerator.Test
         {
             var mock = new Moq.Mock<INonGeneric>();
             Type proxy = new Core.ProxyMaker(typeof(INonGeneric)).CreateProxy();
-            INonGeneric createdObjectFromProxy = Activator.CreateInstance(proxy, mock.Object, new IInterceptor[]{new PassThoughInterceptor()}) as INonGeneric;
+            INonGeneric createdObjectFromProxy = Activator.CreateInstance(proxy, mock.Object, new IInterceptor[]{new PassThroughInterceptor()}) as INonGeneric;
             Assert.NotNull(createdObjectFromProxy);
             createdObjectFromProxy.Test();
             mock.Verify(x => x.Test());

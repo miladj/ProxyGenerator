@@ -58,7 +58,7 @@ namespace ProxyGenerator.Test
             ProxyMaker proxyMaker = new ProxyMaker(typeof(IChild2));
             Type proxy = proxyMaker.CreateProxy();
             Mock<IChild2> mock = new Mock<IChild2>();
-            IChild2 instance = Activator.CreateInstance(proxy, mock.Object, new IInterceptor[]{new PassThoughInterceptor()}) as IChild2;
+            IChild2 instance = Activator.CreateInstance(proxy, mock.Object, new IInterceptor[]{new PassThroughInterceptor()}) as IChild2;
             instance.Test();
             mock.Verify(x => x.Test());
         }
@@ -83,7 +83,7 @@ namespace ProxyGenerator.Test
             Type proxy = proxyMaker.CreateProxy();
             Mock<AbstractClassBase<string>> mock = new Mock<AbstractClassBase<string>>();
             mock.Setup(x => x.Test(10)).Returns("OK");
-            AbstractClassBase<string> instance = Activator.CreateInstance(proxy.MakeGenericType(typeof(string)), mock.Object, new IInterceptor[]{new PassThoughInterceptor()}) as AbstractClassBase<string>;
+            AbstractClassBase<string> instance = Activator.CreateInstance(proxy.MakeGenericType(typeof(string)), mock.Object, new IInterceptor[]{new PassThroughInterceptor()}) as AbstractClassBase<string>;
             var actualRv = instance.Test(10);
             Assert.AreEqual(actualRv, "OK");
 
@@ -110,7 +110,7 @@ namespace ProxyGenerator.Test
             Type proxy = proxyMaker.CreateProxy();
             Mock<AbstractClassChild<int>> mock = new Mock<AbstractClassChild<int>>();
             mock.Setup(x => x.Test(10, 100)).Returns("OK");
-            AbstractClassChild<int> instance = Activator.CreateInstance(proxy.MakeGenericType(typeof(int)), mock.Object, new IInterceptor[]{new PassThoughInterceptor()}) as AbstractClassChild<int>;
+            AbstractClassChild<int> instance = Activator.CreateInstance(proxy.MakeGenericType(typeof(int)), mock.Object, new IInterceptor[]{new PassThroughInterceptor()}) as AbstractClassChild<int>;
             var actualRv = instance.Test(10, 100);
             Assert.AreEqual(actualRv, "OK");
 

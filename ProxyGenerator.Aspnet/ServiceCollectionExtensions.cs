@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
@@ -57,14 +58,14 @@ namespace ProxyGenerator.Aspnet
             return serviceCollection;
         }
 
-        private static bool AreSameType(Type serviceType, Type descriptorServiceType)
+        private static bool AreSameType(Type type1, Type type2)
         {
-            if (descriptorServiceType == serviceType) return true;
-            return serviceType.IsGenericType && descriptorServiceType.IsGenericType &&
-                   serviceType.GetGenericTypeDefinition() == descriptorServiceType.GetGenericTypeDefinition();
+            if (type2 == type1) return true;
+            return type1.IsGenericType && type2.IsGenericType &&
+                   type1.GetGenericTypeDefinition() == type2.GetGenericTypeDefinition();
         }
 
-        public static IServiceCollection Decorate(this IServiceCollection serviceCollection, Type serviceType, Type[] interceptorsType)
+        public static IServiceCollection Intercept(this IServiceCollection serviceCollection, Type serviceType, params Type[] interceptorsType)
         {
             for (var index = 0; index < serviceCollection.Count; index++)
             {
@@ -78,7 +79,6 @@ namespace ProxyGenerator.Aspnet
                         Type proxy = new ProxyMakerAspnet(descriptor.ServiceType, descriptor.ImplementationType, interceptorsType).CreateProxy();
                         serviceCollection[index] =
                             new ServiceDescriptor(descriptor.ServiceType, proxy, descriptor.Lifetime);
-                        
                     }
                     else
                     {
