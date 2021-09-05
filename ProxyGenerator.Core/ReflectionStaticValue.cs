@@ -44,6 +44,8 @@ namespace ProxyGenerator.Core
         public static readonly MethodInfo Type_GetTypeFromHandle =
             typeof(Type).GetMethod(nameof(Type.GetTypeFromHandle), new Type[] {typeof(RuntimeTypeHandle)});
 
+        public static readonly MethodInfo Invocation_Method_Get =
+            TypeInvocation.GetProperty(nameof(Invocation.Method))!.GetMethod!;
         public static readonly MethodInfo Invocation_Method_Set =
             TypeInvocation.GetProperty(nameof(Invocation.Method))!.SetMethod!;
 

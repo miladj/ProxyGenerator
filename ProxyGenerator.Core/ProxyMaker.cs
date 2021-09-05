@@ -304,19 +304,9 @@ namespace ProxyGenerator.Core
                     generator.Emit(OpCodes.Ldfld, _fieldBuilder);
                     generator.Emit(OpCodes.Callvirt, ReflectionStaticValue.Invocation_Original_Set);
 
-                    //Set Method
+                    
                     generator.Emit(OpCodes.Ldloc_0);
                     generator.Emit(OpCodes.Dup);
-                    generator.Emit(OpCodes.Ldtoken, methodInfo);
-                    generator.Emit(OpCodes.Ldtoken, _typeToImplement);
-                    generator.Emit(OpCodes.Call, ReflectionStaticValue.MethodBase_GetMethodFromHandle);
-                    generator.Emit(OpCodes.Castclass, ReflectionStaticValue.MethodInfoType);
-                    generator.Emit(OpCodes.Callvirt, ReflectionStaticValue.Invocation_Method_Set);
-                    // generator.Emit(OpCodes.Pop);
-
-                    // generator.Emit(OpCodes.Ldloc_0);
-                    generator.Emit(OpCodes.Dup);
-                    //                generator.Emit(OpCodes.Call, typeof(ProxyHelperMethods).GetMethod("GGG"));
                     generator.Emit(OpCodes.Ldarg_0);
                     generator.Emit(OpCodes.Ldfld, _fieldBuilder);
                     if (typeArguments.Length > 0)
@@ -457,6 +447,26 @@ namespace ProxyGenerator.Core
             defineDefaultConstructor = defineNestedType.DefineDefaultConstructor(MethodAttributes.Public);
             // defineNestedType.AddInterfaceImplementation(ReflectionStaticValue.TypeIDefaultInvocation);
             defineNestedType.SetParent(ReflectionStaticValue.TypeInvocation);
+            FieldBuilder methodInfoStaticField = defineNestedType.DefineField("__methondInfo", ReflectionStaticValue.MethodInfoType,
+                FieldAttributes.Static | FieldAttributes.Private);
+            
+            ConstructorBuilder staticConstructor = defineNestedType.DefineTypeInitializer();
+            ILGenerator staticCtorIL = staticConstructor.GetILGenerator();
+
+            staticCtorIL.Emit(OpCodes.Ldtoken, methodInfo);
+            staticCtorIL.Emit(OpCodes.Ldtoken, _typeToImplement);
+            staticCtorIL.Emit(OpCodes.Call, ReflectionStaticValue.MethodBase_GetMethodFromHandle);
+            staticCtorIL.Emit(OpCodes.Castclass, ReflectionStaticValue.MethodInfoType);
+            staticCtorIL.Emit(OpCodes.Stsfld, methodInfoStaticField);
+
+            staticCtorIL.Emit(OpCodes.Ret);
+
+            MethodBuilder implementGetForMethod = defineNestedType.DefineMethod(ReflectionStaticValue.Invocation_Method_Get.Name,MethodAttributes.Public|MethodAttributes.Virtual);
+            implementGetForMethod.SetReturnType(ReflectionStaticValue.MethodInfoType);
+            ILGenerator getMethodIL = implementGetForMethod.GetILGenerator();
+            getMethodIL.Emit(OpCodes.Ldsfld,methodInfoStaticField);
+            getMethodIL.Emit(OpCodes.Ret);
+
             MethodBuilder defineMethod =
                 defineNestedType.DefineMethod(nameof(IDefaultInvocation.Invoke), MethodAttributes.Public | MethodAttributes.Virtual,null,null);
             defineMethod.SetReturnType(ReflectionStaticValue.TypeObject);

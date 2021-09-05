@@ -6,7 +6,7 @@ namespace ProxyGenerator.Core
     public abstract class Invocation:IInvocation,IDefaultInvocation
     {
         public object[] Arguments { get; set; }
-        public MethodInfo Method { get; set; }
+        public abstract MethodInfo Method { get; }
 
         public MethodInfo MethodInvocationTarget =>
             ProxyHelperMethods.GetImplMethodInfo(TargetType, Method);
