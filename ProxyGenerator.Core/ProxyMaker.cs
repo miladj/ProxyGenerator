@@ -245,16 +245,35 @@ namespace ProxyGenerator.Core
                     generator.Emit(OpCodes.Brfalse, withoutInterceptor);
 
                     // generator.EmitWriteLine("Interceptor");
-                    ConstructorInfo constructorInfo = ReflectionStaticValue.Invocation_Constructor;
+                    // ConstructorInfo constructorInfo = ReflectionStaticValue.Invocation_Constructor;
 
-                    generator.Emit(OpCodes.Newobj, constructorInfo);
+                    // generator.Emit(OpCodes.Newobj, constructorInfo);
+                    
+                    
+                    
+
+
+                    Type nestedType = CreateNestedType(methodParameters, methodInfo, out var fbs, out var ctor);
+                    Type makeGenericType = nestedType;
+                    Type[] typeArguments = _defineGenericParameters.Concat(methodDefinedGenericArguments).ToArray();
+                    if (typeArguments.Length > 0)
+                        makeGenericType = nestedType.MakeGenericType(typeArguments);
+                    // ConstructorInfo[] constructorInfos = makeGenericType.GetConstructors();
+                    // generator.EmitWriteLine("CreateNestedType");
+
+                    if (typeArguments.Length > 0)
+                        generator.Emit(OpCodes.Newobj, TypeBuilder.GetConstructor(makeGenericType, ctor));
+                    else
+                        generator.Emit(OpCodes.Newobj, ctor);
+
+
                     generator.Emit(OpCodes.Stloc_0);
                     generator.Emit(OpCodes.Ldloc_0);
 
                     // generator.EmitWriteLine("Interceptor 0");
                     //Set Arguments
                     generator.CreateArray(ReflectionStaticValue.TypeObject, newMethodParameterTypes.Length);
-                    
+
                     if (newMethodParameterTypes.Length > 0)
                     {
                         generator.Emit(OpCodes.Dup);
@@ -294,24 +313,8 @@ namespace ProxyGenerator.Core
                     generator.Emit(OpCodes.Castclass, ReflectionStaticValue.MethodInfoType);
                     generator.Emit(OpCodes.Callvirt, ReflectionStaticValue.Invocation_Method_Set);
                     // generator.Emit(OpCodes.Pop);
-                    //Set Other Field
-                    //TODO:Bottleneck
-                    generator.Emit(OpCodes.Call, ReflectionStaticValue.ProxyHelperMethods_FillInvocationProperties);
 
-
-                    Type nestedType = CreateNestedType(methodParameters, methodInfo, out var fbs, out var ctor);
-                    Type makeGenericType = nestedType;
-                    Type[] typeArguments = _defineGenericParameters.Concat(methodDefinedGenericArguments).ToArray();
-                    if (typeArguments.Length > 0)
-                        makeGenericType = nestedType.MakeGenericType(typeArguments);
-                    // ConstructorInfo[] constructorInfos = makeGenericType.GetConstructors();
-                    // generator.EmitWriteLine("CreateNestedType");
-
-                    if (typeArguments.Length > 0)
-                        generator.Emit(OpCodes.Newobj, TypeBuilder.GetConstructor(makeGenericType, ctor));
-                    else
-                        generator.Emit(OpCodes.Newobj, ctor);
-
+                    // generator.Emit(OpCodes.Ldloc_0);
                     generator.Emit(OpCodes.Dup);
                     //                generator.Emit(OpCodes.Call, typeof(ProxyHelperMethods).GetMethod("GGG"));
                     generator.Emit(OpCodes.Ldarg_0);
@@ -452,8 +455,8 @@ namespace ProxyGenerator.Core
             }
 
             defineDefaultConstructor = defineNestedType.DefineDefaultConstructor(MethodAttributes.Public);
-            defineNestedType.AddInterfaceImplementation(ReflectionStaticValue.TypeIDefaultInvocation);
-
+            // defineNestedType.AddInterfaceImplementation(ReflectionStaticValue.TypeIDefaultInvocation);
+            defineNestedType.SetParent(ReflectionStaticValue.TypeInvocation);
             MethodBuilder defineMethod =
                 defineNestedType.DefineMethod(nameof(IDefaultInvocation.Invoke), MethodAttributes.Public | MethodAttributes.Virtual,null,null);
             defineMethod.SetReturnType(ReflectionStaticValue.TypeObject);

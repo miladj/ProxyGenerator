@@ -13,18 +13,15 @@ namespace ProxyGenerator.Core
         public static readonly Type TypeIInterceptor = typeof(IInterceptor);
         public static readonly Type TypeObject = typeof(object);
         public static readonly Type TypeIServiceProvider = typeof(IServiceProvider);
-        public static readonly Type TypeIDefaultInvocation = typeof(IDefaultInvocation);
         public static readonly Type TypeIInvocation = typeof(IInvocation);
         public static readonly Type TypeArrayOfIInterceptor = typeof(IInterceptor[]);
         public static readonly Type TypeVoid = typeof(void);
-        public static readonly Type TypeProxyHelperMethods = typeof(ProxyHelperMethods);
 
         #endregion
 
         #region Constructors
 
         public static readonly ConstructorInfo Object_Constructor = TypeObject.GetConstructor(Type.EmptyTypes)!;
-        public static readonly ConstructorInfo Invocation_Constructor = TypeInvocation.GetConstructors()[0];
 
         public static readonly ConstructorInfo InterceptorHelper_Constructor =
             TypeInterceptorHelper.GetConstructors()[0];
@@ -40,9 +37,7 @@ namespace ProxyGenerator.Core
         public static readonly MethodInfo InterceptorHelper_Intercept =
             TypeInterceptorHelper.GetMethod(nameof(InterceptorHelper.Intercept));
 
-        public static readonly MethodInfo ProxyHelperMethods_FillInvocationProperties =
-            TypeProxyHelperMethods.GetMethod(nameof(ProxyHelperMethods.FillInvocationProperties));
-
+        
         public static readonly MethodInfo IServiceProvider_GetService =
             TypeIServiceProvider.GetMethod(nameof(IServiceProvider.GetService));
 
