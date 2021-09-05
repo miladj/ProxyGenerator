@@ -8,19 +8,29 @@ namespace ProxyGenerator.Benchmark
     {
         private ITest _manualCreatedInstance;
         private ITest _generatedProxyInstance;
+        private ITest _windsorGeneratedProxy;
 
         [GlobalSetup]
         public void Setup()
         {
-            _manualCreatedInstance = new Proxy(new DefaultImpl(),new PassThoughInterceptor());
+            _manualCreatedInstance = new Proxy(new DefaultImpl(),new PassThroughInterceptor());
             _generatedProxyInstance = Activator.CreateInstance(ProxyMaker.CreateProxyType(typeof(ITest)),
-                new DefaultImpl(), new IInterceptor[] {new PassThoughInterceptor()}) as ITest;
+                new DefaultImpl(), new IInterceptor[] {new PassThroughInterceptor()}) as ITest;
+            _windsorGeneratedProxy = new Castle.DynamicProxy.ProxyGenerator().CreateInterfaceProxyWithTarget<ITest>(new DefaultImpl(),new WindsorPassThroughInterceptor());
+            
         }
-        public class PassThoughInterceptor : IInterceptor
+        public class PassThroughInterceptor : IInterceptor
         {
             public virtual object Intercept(IInvocation invocation, Func<object> next)
             {
                 return next();
+            }
+        }
+        public class WindsorPassThroughInterceptor : Castle.DynamicProxy.IInterceptor
+        {
+            public void Intercept(Castle.DynamicProxy.IInvocation invocation)
+            {
+                invocation.Proceed();
             }
         }
         public interface ITest
@@ -57,5 +67,7 @@ namespace ProxyGenerator.Benchmark
         public void NonProxyCall() => _manualCreatedInstance.Test();
         [Benchmark]
         public void ProxyCall() => _generatedProxyInstance.Test();
+        [Benchmark]
+        public void WindsOrProxyCall() => _windsorGeneratedProxy.Test();
     }
 }
