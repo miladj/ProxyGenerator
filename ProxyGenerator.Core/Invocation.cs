@@ -5,6 +5,10 @@ namespace ProxyGenerator.Core
 {
     public abstract class Invocation:IInvocation,IDefaultInvocation
     {
+        public Invocation()
+        {
+
+        }
         public object[] Arguments { get; set; }
         public abstract MethodInfo Method { get; }
 

@@ -26,6 +26,7 @@ namespace ProxyGenerator.Core
         public static readonly ConstructorInfo InterceptorHelper_Constructor =
             TypeInterceptorHelper.GetConstructors()[0];
 
+        public static readonly ConstructorInfo Invocation_Constructor = TypeInvocation.GetConstructors()[0];
         #endregion
 
         #region MethodInfo

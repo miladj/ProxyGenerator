@@ -444,10 +444,17 @@ namespace ProxyGenerator.Core
                 fb[i] = fieldBuilder;
             }
 
-            defineDefaultConstructor = defineNestedType.DefineDefaultConstructor(MethodAttributes.Public);
+            // defineDefaultConstructor = defineNestedType.DefineDefaultConstructor(MethodAttributes.Public);
             // defineNestedType.AddInterfaceImplementation(ReflectionStaticValue.TypeIDefaultInvocation);
+            defineDefaultConstructor =
+                defineNestedType.DefineConstructor(MethodAttributes.Public, CallingConventions.Standard, null);
+            ILGenerator constructorIlGenerator = defineDefaultConstructor.GetILGenerator();
+            constructorIlGenerator.Emit(OpCodes.Ldarg_0);
+            constructorIlGenerator.Emit(OpCodes.Call,ReflectionStaticValue.Invocation_Constructor);
+            constructorIlGenerator.Emit(OpCodes.Ret);
+
             defineNestedType.SetParent(ReflectionStaticValue.TypeInvocation);
-            FieldBuilder methodInfoStaticField = defineNestedType.DefineField("__methondInfo", ReflectionStaticValue.MethodInfoType,
+            FieldBuilder methodInfoStaticField = defineNestedType.DefineField("__methodInfo", ReflectionStaticValue.MethodInfoType,
                 FieldAttributes.Static | FieldAttributes.Private);
             
             ConstructorBuilder staticConstructor = defineNestedType.DefineTypeInitializer();
