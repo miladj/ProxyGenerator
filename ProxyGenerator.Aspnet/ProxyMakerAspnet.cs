@@ -14,28 +14,31 @@ namespace ProxyGenerator.Aspnet
         protected readonly FieldBuilder _serviceProviderField;
         private readonly Type[] _interceptorTypes;
         
-        protected ProxyMakerAspnet(Type typeToProxy, Type implementType, Type[] interceptorTypes) : base(typeToProxy)
+        protected ProxyMakerAspnet(Type typeToProxy, Type implementType, Type[] interceptorTypes) : this(typeToProxy, implementType, null, interceptorTypes)
         {
+        }
+
+        protected ProxyMakerAspnet(Type typeToProxy, Type implementType, Type decoratorType) : this(typeToProxy,
+            implementType, decoratorType, null)
+        {
+
+        }
+
+        private ProxyMakerAspnet(Type typeToProxy, Type implementType, Type decoratorType =null, Type[] interceptorTypes = null) : base(typeToProxy)
+        {
+            if (implementType == null)
+            {
+                //TODO: throw exception
+                throw new NullReferenceException("ImplementType");
+            }
             this._implementType = implementType;
-            this._decoratorType = null;
+            this._decoratorType = decoratorType;
             this._interceptorTypes = interceptorTypes;
             _serviceProviderField = _typeBuilder.DefineField("___Iserviceprovider", ReflectionStaticValue.TypeIServiceProvider, FieldAttributes.Private);
         }
-        protected ProxyMakerAspnet(Type typeToProxy, Type implementType, Type decoratorType) : base(typeToProxy)
-        {
-            this._implementType = implementType;
-            this._decoratorType = decoratorType;
-            
-            _serviceProviderField = _typeBuilder.DefineField("___Iserviceprovider", ReflectionStaticValue.TypeIServiceProvider, FieldAttributes.Private);
-        }
-
 
         protected override void CreateConstructor()
         {
-            if (_implementType == null)
-            {
-                //TODO: throw exception
-            }
             if (this._defineGenericParameters !=null  && _defineGenericParameters.Length>0)
             {
 
@@ -91,6 +94,7 @@ namespace ProxyGenerator.Aspnet
                 ilGenerator.Emit(OpCodes.Call, ReflectionStaticValue.ActivatorCreateInstanceUtilities);
                 ilGenerator.Emit(OpCodes.Isinst, _typeToImplement);
             }
+
             ilGenerator.Emit(OpCodes.Stfld, _fieldBuilder);
 
             if (_decoratorType == null)

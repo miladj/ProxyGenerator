@@ -155,23 +155,21 @@ namespace ProxyGenerator.Core
                         }
                     }
 
-                    // methodInfo=methodInfo.MakeGenericMethod(genericTypeParameterBuilders);
-
                 }
 
                 methodBuilder.SetParameters(newMethodParameterTypes);
                 methodBuilder.SetReturnType(methodInfoReturnType);
 
                 ILGenerator generator = methodBuilder.GetILGenerator();
-                // generator.EmitWriteLine("inja 0");
+                
                 generator.DeclareLocal(ReflectionStaticValue.TypeIInvocation);
                 Label withoutInterceptor = generator.DefineLabel();
-                //can use to flag to generate this part or not
+                //we can use a flag to generate this part or not
                 //but here we check for null interceptors in generated code
                 generator.Emit(OpCodes.Ldarg_0);
                 generator.Emit(OpCodes.Ldfld, _interceptorsField);
                 generator.Emit(OpCodes.Brfalse, withoutInterceptor);
-                // generator.Emit(OpCodes.Pop);
+
                 generator.Emit(OpCodes.Ldarg_0);
                     generator.Emit(OpCodes.Ldfld, _interceptorsField);
                     generator.Emit(OpCodes.Ldlen);
@@ -179,13 +177,6 @@ namespace ProxyGenerator.Core
                     generator.Emit(OpCodes.Cgt_Un);
                     generator.Emit(OpCodes.Brfalse, withoutInterceptor);
 
-                    // generator.EmitWriteLine("Interceptor");
-                    // ConstructorInfo constructorInfo = ReflectionStaticValue.Invocation_Constructor;
-
-                    // generator.Emit(OpCodes.Newobj, constructorInfo);
-                    
-                    
-                    
 
 
                     Type nestedType = CreateNestedType(methodParameters, methodInfo, out var fbs, out var ctor);
@@ -193,8 +184,6 @@ namespace ProxyGenerator.Core
                     Type[] typeArguments = _defineGenericParameters.Concat(methodDefinedGenericArguments).ToArray();
                     if (typeArguments.Length > 0)
                         makeGenericType = nestedType.MakeGenericType(typeArguments);
-                    // ConstructorInfo[] constructorInfos = makeGenericType.GetConstructors();
-                    // generator.EmitWriteLine("CreateNestedType");
 
                     if (typeArguments.Length > 0)
                         generator.Emit(OpCodes.Newobj, TypeBuilder.GetConstructor(makeGenericType, ctor));
@@ -204,8 +193,7 @@ namespace ProxyGenerator.Core
 
                     generator.Emit(OpCodes.Stloc_0);
                     generator.Emit(OpCodes.Ldloc_0);
-
-                    // generator.EmitWriteLine("Interceptor 0");
+                
                     //Set Arguments
                     generator.CreateArray(ReflectionStaticValue.TypeObject, newMethodParameterTypes.Length);
 
@@ -231,7 +219,6 @@ namespace ProxyGenerator.Core
                     }
 
                     generator.Emit(OpCodes.Callvirt, ReflectionStaticValue.Invocation_Arguments_Set);
-                    // generator.EmitWriteLine("Interceptor -1");
 
                     //Set Original
                     generator.Emit(OpCodes.Ldloc_0);
@@ -315,7 +302,6 @@ namespace ProxyGenerator.Core
             if (methodInfo.IsGenericMethod)
             {
                 Type[] methodGenericArguments = methodInfo.GetGenericArguments();
-                //genericArgument.AddRange(parametersType.Where(x=>Array.IndexOf(array,x)>-1));
                 genericArgument.AddRange(methodGenericArguments);
             
             }
@@ -375,9 +361,7 @@ namespace ProxyGenerator.Core
                     FieldAttributes.Public);
                 fb[i] = fieldBuilder;
             }
-
-            // defineDefaultConstructor = defineNestedType.DefineDefaultConstructor(MethodAttributes.Public);
-            // defineNestedType.AddInterfaceImplementation(ReflectionStaticValue.TypeIDefaultInvocation);
+            
             defineDefaultConstructor =
                 defineNestedType.DefineConstructor(MethodAttributes.Public, CallingConventions.Standard, null);
             ILGenerator constructorIlGenerator = defineDefaultConstructor.GetILGenerator();
