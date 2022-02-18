@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Reflection;
 using System.Reflection.Emit;
 using Microsoft.Extensions.DependencyInjection;
@@ -10,20 +11,22 @@ namespace ProxyGenerator.Aspnet
     {
         private Type _implementType=null;
         private Type _decoratorType = null;
-        protected ProxyMakerAspnet(Type typeToProxy) : base(typeToProxy, Array.Empty<Type>(), false)
-        {
-        }
-
-        protected ProxyMakerAspnet(Type typeToProxy, Type implementType, Type[] interceptorTypes) : base(typeToProxy, interceptorTypes, true)
+        protected readonly FieldBuilder _serviceProviderField;
+        private readonly Type[] _interceptorTypes;
+        
+        protected ProxyMakerAspnet(Type typeToProxy, Type implementType, Type[] interceptorTypes) : base(typeToProxy)
         {
             this._implementType = implementType;
             this._decoratorType = null;
+            this._interceptorTypes = interceptorTypes;
+            _serviceProviderField = _typeBuilder.DefineField("___Iserviceprovider", ReflectionStaticValue.TypeIServiceProvider, FieldAttributes.Private);
         }
-        protected ProxyMakerAspnet(Type typeToProxy, Type implementType, Type decoratorType) : base(typeToProxy, Array.Empty<Type>(), true)
+        protected ProxyMakerAspnet(Type typeToProxy, Type implementType, Type decoratorType) : base(typeToProxy)
         {
             this._implementType = implementType;
             this._decoratorType = decoratorType;
-            _generateInterceptorPart = false;
+            
+            _serviceProviderField = _typeBuilder.DefineField("___Iserviceprovider", ReflectionStaticValue.TypeIServiceProvider, FieldAttributes.Private);
         }
 
 
@@ -31,8 +34,7 @@ namespace ProxyGenerator.Aspnet
         {
             if (_implementType == null)
             {
-                base.CreateConstructor();
-                return;
+                //TODO: throw exception
             }
             if (this._defineGenericParameters !=null  && _defineGenericParameters.Length>0)
             {
@@ -41,19 +43,14 @@ namespace ProxyGenerator.Aspnet
                 _decoratorType = _decoratorType?.MakeGenericType(_defineGenericParameters);
             }
 
-
-            Type[] parameterTypes = _decoratorType switch
+            List<Type> lst = new List<Type>();
+            lst.Add(typeof(IServiceProvider));
+            if (_decoratorType == null)
             {
-                null => new[]
-                {
-                    typeof(IServiceProvider),
-                    ReflectionStaticValue.TypeArrayOfIInterceptor
-                },
-                _ => new[]
-                {
-                    typeof(IServiceProvider)
-                }
-            };
+                lst.AddRange(_interceptorTypes);
+            }
+
+            Type[] parameterTypes = lst.ToArray();
                 
             
             ConstructorBuilder constructorBuilder = _typeBuilder.DefineConstructor(MethodAttributes.Public, CallingConventions.Standard, parameterTypes);
@@ -100,9 +97,24 @@ namespace ProxyGenerator.Aspnet
             {
                 FillInterceptorFieldWithServiceProvider(ilGenerator);
             }
-            
 
             ilGenerator.Emit(OpCodes.Ret);
+        }
+        protected void FillInterceptorFieldWithServiceProvider(ILGenerator ilGenerator)
+        {
+            ilGenerator.Emit(OpCodes.Ldarg_0);
+            ilGenerator.CreateArray(ReflectionStaticValue.TypeIInterceptor, _interceptorTypes.Length);
+            ilGenerator.Emit(OpCodes.Dup);
+            for (var index = 0; index < _interceptorTypes.Length; index++)
+            {
+                ilGenerator.Ldc_I4(index);
+                ilGenerator.Ldarg(index+2);
+                ilGenerator.Emit(OpCodes.Stelem_Ref);
+                if (index != _interceptorTypes.Length - 1)
+                    ilGenerator.Emit(OpCodes.Dup);
+            }
+
+            ilGenerator.Emit(OpCodes.Stfld, _interceptorsField);
         }
     }
 }

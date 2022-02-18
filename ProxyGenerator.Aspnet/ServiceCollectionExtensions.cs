@@ -14,6 +14,9 @@ namespace ProxyGenerator.Aspnet
         }
         public static IServiceCollection Decorate(this IServiceCollection serviceCollection,Type serviceType,Type decoratorType)
         {
+            //TODO:Exception
+            if (!IsAssignableTo(decoratorType, serviceType))
+                throw new Exception("Not compatible");
             for (var index = 0; index < serviceCollection.Count; index++)
             {
                 
@@ -125,6 +128,30 @@ namespace ProxyGenerator.Aspnet
         public static bool IsOpenGeneric(Type type)
         {
             return type.IsGenericTypeDefinition;
+        }
+        public static bool IsAssignableTo(Type givenType, Type genericType)
+        {
+            if (givenType.IsAssignableTo(genericType))
+                return true;
+            if (AreSameType(givenType, genericType))
+            {
+                return true;
+            }
+            var interfaceTypes = givenType.GetInterfaces();
+
+            foreach (var it in interfaceTypes)
+            {
+                if (it.IsGenericType && it.GetGenericTypeDefinition() == genericType)
+                    return true;
+            }
+
+            if (givenType.IsGenericType && givenType.GetGenericTypeDefinition() == genericType)
+                return true;
+
+            Type baseType = givenType.BaseType;
+            if (baseType == null) return false;
+
+            return IsAssignableTo(baseType, genericType);
         }
     }
 }

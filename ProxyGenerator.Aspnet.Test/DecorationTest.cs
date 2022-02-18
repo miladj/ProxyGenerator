@@ -156,6 +156,7 @@ namespace ProxyGenerator.Aspnet.Test
                 services.Decorate(typeof(ISimple<>), typeof(SimpleDecorator<>));
             });
             var service = serviceCollection.GetService(typeof(ISimple<int>)) as ISimple<int>;
+            Assert.IsNotNull(service);
             string test = service.Test();
             Assert.AreEqual("OK",test);
             Assert.IsNotInstanceOf<SimpleDecorator<int>>(service);
