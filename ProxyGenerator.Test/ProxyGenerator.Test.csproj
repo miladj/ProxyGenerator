@@ -1,9 +1,10 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFrameworks>netcoreapp3.1;net461;net5.0;net6.0</TargetFrameworks>
 
     <IsPackable>false</IsPackable>
+    <LangVersion>8.0</LangVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -17,6 +18,10 @@
 
   <ItemGroup>
     <ProjectReference Include="..\ProxyGenerator.Core\ProxyGenerator.Core.csproj" />
+  </ItemGroup>
+  
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net461' or  '$(TargetFramework)' == 'netcoreapp3.1' ">
+    <PackageReference Include="System.ValueTuple" Version="4.5.0" />
   </ItemGroup>
 
 </Project>

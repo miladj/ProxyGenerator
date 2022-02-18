@@ -131,7 +131,7 @@ namespace ProxyGenerator.Aspnet
         }
         public static bool IsAssignableTo(Type givenType, Type genericType)
         {
-            if (givenType.IsAssignableTo(genericType))
+            if (genericType.IsAssignableFrom(givenType))
                 return true;
             if (AreSameType(givenType, genericType))
             {
