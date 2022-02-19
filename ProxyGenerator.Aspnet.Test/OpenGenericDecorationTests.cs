@@ -1,9 +1,9 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
-using Scrutor.Tests;
 
 namespace ProxyGenerator.Aspnet.Test
 {
+    public interface IQueryHandler<TQuery, TResult> { }
     public class OpenGenericDecorationTests : TestBase
     {
         [Test]

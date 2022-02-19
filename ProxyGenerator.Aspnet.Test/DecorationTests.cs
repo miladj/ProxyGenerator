@@ -5,7 +5,6 @@ using System.Reflection;
 using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
 using ProxyGenerator.Core;
-using Scrutor.Tests;
 
 namespace ProxyGenerator.Aspnet.Test
 {

@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Reflection;
 
+// ReSharper disable once CheckNamespace
 namespace ProxyGenerator.Core
 {
     public static partial class ReflectionStaticValue

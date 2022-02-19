@@ -82,7 +82,7 @@ namespace ProxyGenerator.Aspnet
                     else
                     {
 
-                        Type proxy = ProxyMakerAspnet.CreateProxyType(descriptor.ServiceType);
+                        Type proxy = ProxyMaker.CreateProxyType(descriptor.ServiceType);
                         serviceCollection[index] = CreateNewDescriptorForFactory(descriptor,
                             provider => provider.GetOriginalInstanceForInterceptors(descriptor, proxy,
                                 interceptorsType));
@@ -94,7 +94,7 @@ namespace ProxyGenerator.Aspnet
 
         private static ServiceDescriptor CreateNewDescriptorForFactory(ServiceDescriptor oldDescriptor, Func<IServiceProvider, object> factory) =>
             new ServiceDescriptor(oldDescriptor.ServiceType, factory, oldDescriptor.Lifetime);
-        private static object? GetDescriptorInstance(this IServiceProvider serviceProvider, ServiceDescriptor descriptor)
+        private static object GetDescriptorInstance(this IServiceProvider serviceProvider, ServiceDescriptor descriptor)
         {
             if (descriptor.ImplementationType != null)
                 return serviceProvider.GetServiceOrCreateInstance(descriptor.ImplementationType);
@@ -105,7 +105,7 @@ namespace ProxyGenerator.Aspnet
             else
                 throw new NotSupportedException("unknown descriptor");
         }
-        private static object? GetOriginalInstanceForDecorator(this IServiceProvider serviceProvider, ServiceDescriptor descriptor,
+        private static object GetOriginalInstanceForDecorator(this IServiceProvider serviceProvider, ServiceDescriptor descriptor,
             Type decoratorType)
         {
             object[] arguments = new object[1];
@@ -113,7 +113,7 @@ namespace ProxyGenerator.Aspnet
             return serviceProvider.GetServiceOrCreateInstance(decoratorType, arguments);
         }
 
-        private static object? GetOriginalInstanceForInterceptors(this IServiceProvider serviceProvider, ServiceDescriptor descriptor,Type proxyType, Type[] interceptorsType)
+        private static object GetOriginalInstanceForInterceptors(this IServiceProvider serviceProvider, ServiceDescriptor descriptor,Type proxyType, Type[] interceptorsType)
         {
             object[] arguments = new object[2];
             arguments[0] = serviceProvider.GetDescriptorInstance(descriptor);
@@ -129,29 +129,32 @@ namespace ProxyGenerator.Aspnet
         {
             return type.IsGenericTypeDefinition;
         }
-        public static bool IsAssignableTo(Type givenType, Type genericType)
+        public static bool IsAssignableTo(Type srcType, Type destType)
         {
-            if (genericType.IsAssignableFrom(givenType))
+            if (destType.IsAssignableFrom(srcType))
                 return true;
-            if (AreSameType(givenType, genericType))
+            if (AreSameType(srcType, destType))
             {
                 return true;
             }
-            var interfaceTypes = givenType.GetInterfaces();
+
+            if (srcType.IsGenericType && srcType.GetGenericTypeDefinition() == destType)
+                return true;
+
+            var interfaceTypes = srcType.GetInterfaces();
 
             foreach (var it in interfaceTypes)
             {
-                if (it.IsGenericType && it.GetGenericTypeDefinition() == genericType)
+                if (it.IsGenericType && it.GetGenericTypeDefinition() == destType)
                     return true;
             }
 
-            if (givenType.IsGenericType && givenType.GetGenericTypeDefinition() == genericType)
-                return true;
+            
 
-            Type baseType = givenType.BaseType;
+            Type baseType = srcType.BaseType;
             if (baseType == null) return false;
 
-            return IsAssignableTo(baseType, genericType);
+            return IsAssignableTo(baseType, destType);
         }
     }
 }

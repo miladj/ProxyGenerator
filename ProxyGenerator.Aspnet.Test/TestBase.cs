@@ -2,7 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using NUnit.Framework;
 
-namespace Scrutor.Tests
+namespace ProxyGenerator.Aspnet.Test
 {
     public class TestBase
     {
