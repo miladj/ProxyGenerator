@@ -112,7 +112,7 @@ namespace ProxyGenerator.Test
 
            
             var interceptorMock = new Mock<PassThroughInterceptor>();
-            interceptorMock.Setup(x => x.Intercept(It.Is<IInvocation>(x=>x.Original==mock.Object && x.MethodInvocationTarget==mock.Object.GetType().GetMethod(nameof(ITestInterceptor.Test),Array.Empty<Type>())), It.IsAny<Func<object>>()))
+            interceptorMock.Setup(x => x.Intercept(It.Is<IInvocation>(x=>x.Target==mock.Object && x.MethodInvocationTarget==mock.Object.GetType().GetMethod(nameof(ITestInterceptor.Test),Array.Empty<Type>())), It.IsAny<Func<object>>()))
                 .Returns((IInvocation _, Func<object> next) => next());
             ServiceCollection sc = new ServiceCollection();
             sc.AddSingleton(typeof(ITestInterceptor), mock.Object);

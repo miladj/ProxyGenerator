@@ -15,7 +15,7 @@ namespace ProxyGenerator.Core
         public MethodInfo MethodInvocationTarget =>
             ProxyHelperMethods.GetImplMethodInfo(TargetType, Method);
 
-        public object Original
+        public object Target
         {
             get => _target;
             set => _target = value;
@@ -23,7 +23,7 @@ namespace ProxyGenerator.Core
 
         protected object _target;
 
-        public Type TargetType => Original?.GetType();
+        public Type TargetType => Target?.GetType();
 
         public abstract object Invoke();
     }

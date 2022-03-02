@@ -44,7 +44,7 @@ namespace ProxyGenerator.Test
                 .Returns((IInvocation invocation, Func<object> next) =>
                 {
                     //change target in interceptor
-                    invocation.Original = new Impl2();
+                    invocation.Target = new Impl2();
                     return next();
                 }).Verifiable();
 

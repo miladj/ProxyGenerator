@@ -51,7 +51,7 @@ namespace ProxyGenerator.Core
             TypeInvocation.GetProperty(nameof(Invocation.Method))!.SetMethod!;
 
         public static readonly MethodInfo Invocation_Original_Set =
-            TypeInvocation.GetProperty(nameof(Invocation.Original))!.SetMethod!;
+            TypeInvocation.GetProperty(nameof(Invocation.Target))!.SetMethod!;
 
         public static readonly MethodInfo Invocation_Arguments_Set =
             TypeInvocation.GetProperty(nameof(Invocation.Arguments))!.SetMethod!;
