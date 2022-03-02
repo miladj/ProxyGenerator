@@ -18,43 +18,32 @@ namespace ProxyGenerator.Test
             string TestMethod(int id);
         }
 
-        public class Impl1 : ITestMethod
-        {
-            public string TestMethod(int id)
-            {
-                return "1";
-            }
-        }
-        public class Impl2 : ITestMethod
-        {
-            public string TestMethod(int id)
-            {
-                return "2";
-            }
-        }
+        
         [Test]
         public void TestChangeTargetInInterceptor()
         {
             const string expectedRv = "2";
-
+            Mock<ITestMethod> mock1 = new Mock<ITestMethod>();
+            Mock<ITestMethod> mock2 = new Mock<ITestMethod>();
+            mock2.Setup(x => x.TestMethod(It.IsAny<int>())).Returns("2").Verifiable();
+            
             var mockInterceptor = new Mock<IInterceptor>();
-            
-            
             mockInterceptor.Setup(x => x.Intercept(It.IsAny<IInvocation>(), It.IsAny<Func<object>>()))
                 .Returns((IInvocation invocation, Func<object> next) =>
                 {
                     //change target in interceptor
-                    invocation.Target = new Impl2();
+                    invocation.Target = mock2.Object;
                     return next();
                 }).Verifiable();
 
             Type proxy = ProxyMaker.CreateProxyType(typeof(ITestMethod));
-            var instance = Activator.CreateInstance(proxy, new Impl1(), new IInterceptor[] { mockInterceptor.Object }) as ITestMethod;
+            var instance = Activator.CreateInstance(proxy, mock1.Object, new IInterceptor[] { mockInterceptor.Object }) as ITestMethod;
 
             var actualRv = instance!.TestMethod(90);
 
             Assert.AreEqual(expectedRv, actualRv);
-            //mock.VerifyAll();
+            mock1.Verify(x=>x.TestMethod(It.IsAny<int>()),Times.Never);
+            mock2.Verify();
             mockInterceptor.VerifyAll();
 
         }
