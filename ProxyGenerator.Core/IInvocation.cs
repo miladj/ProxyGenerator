@@ -11,7 +11,7 @@ namespace ProxyGenerator.Core
 
         MethodInfo MethodInvocationTarget { get; }
 
-        object Original { get; }
+        object Original { get; set; }
 
         Type TargetType { get; }
 

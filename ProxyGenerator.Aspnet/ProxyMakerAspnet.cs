@@ -64,14 +64,14 @@ namespace ProxyGenerator.Aspnet
 
             ilGenerator.CallObjectCtorAsBaseCtor();
 
-            ilGenerator.Emit(OpCodes.Ldarg_0);
+            ilGenerator.Ldarg(0);
             ilGenerator.Emit(OpCodes.Ldarg_1);
             ilGenerator.Emit(OpCodes.Stfld, _serviceProviderField);
 
             
             
 
-            ilGenerator.Emit(OpCodes.Ldarg_0);
+            ilGenerator.Ldarg(0);
 
             ilGenerator.Emit(OpCodes.Ldarg_1);
             ilGenerator.Emit(OpCodes.Ldtoken, _implementType);
@@ -106,7 +106,7 @@ namespace ProxyGenerator.Aspnet
         }
         protected void FillInterceptorFieldWithServiceProvider(ILGenerator ilGenerator)
         {
-            ilGenerator.Emit(OpCodes.Ldarg_0);
+            ilGenerator.Ldarg(0);
             ilGenerator.CreateArray(ReflectionStaticValue.TypeIInterceptor, _interceptorTypes.Length);
             ilGenerator.Emit(OpCodes.Dup);
             for (var index = 0; index < _interceptorTypes.Length; index++)

@@ -92,11 +92,11 @@ namespace ProxyGenerator.Core
             ILGenerator ilGenerator = constructorBuilder.GetILGenerator();
             ilGenerator.CallObjectCtorAsBaseCtor();
 
-            ilGenerator.Emit(OpCodes.Ldarg_0);
+            ilGenerator.Ldarg(0);
             ilGenerator.Emit(OpCodes.Ldarg_1);
             ilGenerator.Emit(OpCodes.Stfld, _fieldBuilder);
 
-            ilGenerator.Emit(OpCodes.Ldarg_0);
+            ilGenerator.Ldarg(0);
             ilGenerator.Emit(OpCodes.Ldarg_2);
             ilGenerator.Emit(OpCodes.Stfld, _interceptorsField);
 
@@ -123,7 +123,7 @@ namespace ProxyGenerator.Core
 
             foreach (MethodInfo methodInfo in methodInfos)
             {
-                
+
                 ParameterInfo[] methodParameters = methodInfo.GetParameters();
                 MethodBuilder methodBuilder = _typeBuilder.DefineMethod(methodInfo.Name,
                     MethodAttributes.Public | MethodAttributes.Virtual);
@@ -131,7 +131,8 @@ namespace ProxyGenerator.Core
 
                 Type[] newMethodParameterTypes = methodParameters.Select(x => x.ParameterType).ToArray();
                 Type methodInfoReturnType = methodInfo.ReturnType;
-                GenericTypeParameterBuilder[] methodDefinedGenericArguments = Array.Empty<GenericTypeParameterBuilder>();
+                GenericTypeParameterBuilder[] methodDefinedGenericArguments =
+                    Array.Empty<GenericTypeParameterBuilder>();
                 if (methodInfo.IsGenericMethod)
                 {
                     var methodGenericArgumentsType = methodInfo.GetGenericArguments();
@@ -161,123 +162,126 @@ namespace ProxyGenerator.Core
                 methodBuilder.SetReturnType(methodInfoReturnType);
 
                 ILGenerator generator = methodBuilder.GetILGenerator();
-                
+
                 generator.DeclareLocal(ReflectionStaticValue.TypeIInvocation);
                 Label withoutInterceptor = generator.DefineLabel();
                 //we can use a flag to generate this part or not
                 //but here we check for null interceptors in generated code
-                generator.Emit(OpCodes.Ldarg_0);
+                generator.Ldarg(0);
                 generator.Emit(OpCodes.Ldfld, _interceptorsField);
                 generator.Emit(OpCodes.Brfalse, withoutInterceptor);
 
-                generator.Emit(OpCodes.Ldarg_0);
-                    generator.Emit(OpCodes.Ldfld, _interceptorsField);
-                    generator.Emit(OpCodes.Ldlen);
-                    generator.Emit(OpCodes.Ldc_I4_0);
-                    generator.Emit(OpCodes.Cgt_Un);
-                    generator.Emit(OpCodes.Brfalse, withoutInterceptor);
+                generator.Ldarg(0);
+                generator.Emit(OpCodes.Ldfld, _interceptorsField);
+                generator.Emit(OpCodes.Ldlen);
+                generator.Ldc_I4(0);
+                generator.Emit(OpCodes.Cgt_Un);
+                generator.Emit(OpCodes.Brfalse, withoutInterceptor);
 
 
+                #region interceptor part generator
+                Type nestedType = CreateNestedType(methodParameters, methodInfo, out var fbs, out var ctor);
+                Type makeGenericType = nestedType;
+                Type[] typeArguments = _defineGenericParameters.Concat(methodDefinedGenericArguments).ToArray();
+                if (typeArguments.Length > 0)
+                    makeGenericType = nestedType.MakeGenericType(typeArguments);
 
-                    Type nestedType = CreateNestedType(methodParameters, methodInfo, out var fbs, out var ctor);
-                    Type makeGenericType = nestedType;
-                    Type[] typeArguments = _defineGenericParameters.Concat(methodDefinedGenericArguments).ToArray();
-                    if (typeArguments.Length > 0)
-                        makeGenericType = nestedType.MakeGenericType(typeArguments);
-
-                    if (typeArguments.Length > 0)
-                        generator.Emit(OpCodes.Newobj, TypeBuilder.GetConstructor(makeGenericType, ctor));
-                    else
-                        generator.Emit(OpCodes.Newobj, ctor);
-
-
-                    generator.Emit(OpCodes.Stloc_0);
-                    generator.Emit(OpCodes.Ldloc_0);
-                
-                    //Set Arguments
-                    generator.CreateArray(ReflectionStaticValue.TypeObject, newMethodParameterTypes.Length);
-
-                    if (newMethodParameterTypes.Length > 0)
-                    {
-                        generator.Emit(OpCodes.Dup);
-                        for (var i = 1; i <= newMethodParameterTypes.Length; i++)
-                        {
-
-                            generator.Ldc_I4(i - 1);
-                            generator.Ldarg(i);
-
-                            Type parameterType = newMethodParameterTypes[i - 1];
-                            if (parameterType.IsValueType || parameterType.IsGenericParameter)
-                            {
-                                generator.Emit(OpCodes.Box, parameterType);
-                            }
-
-                            generator.Emit(OpCodes.Stelem_Ref);
-                            if (methodParameters.Length != i)
-                                generator.Emit(OpCodes.Dup);
-                        }
-                    }
-
-                    generator.Emit(OpCodes.Callvirt, ReflectionStaticValue.Invocation_Arguments_Set);
-
-                    //Set Original
-                    generator.Emit(OpCodes.Ldloc_0);
-                    generator.Emit(OpCodes.Ldarg_0);
-                    generator.Emit(OpCodes.Ldfld, _fieldBuilder);
-                    generator.Emit(OpCodes.Callvirt, ReflectionStaticValue.Invocation_Original_Set);
-
-                    
-                    generator.Emit(OpCodes.Ldloc_0);
-                    generator.Emit(OpCodes.Dup);
-                    generator.Emit(OpCodes.Ldarg_0);
-                    generator.Emit(OpCodes.Ldfld, _fieldBuilder);
-                    if (typeArguments.Length > 0)
-                        generator.Emit(OpCodes.Stfld, TypeBuilder.GetField(makeGenericType, fbs[0]));
-                    else
-                        generator.Emit(OpCodes.Stfld, fbs[0]);
-                    if (methodParameters.Length > 0)
-                    {
-                        generator.Emit(OpCodes.Dup);
-
-                        for (var i = 1; i <= methodParameters.Length; i++)
-                        {
-                            generator.Ldarg(i);
-
-                            if (typeArguments.Length > 0)
-                                generator.Emit(OpCodes.Stfld, TypeBuilder.GetField(makeGenericType, fbs[i]));
-                            else
-                                generator.Emit(OpCodes.Stfld, fbs[i]);
-                            if (methodParameters.Length != i)
-                                generator.Emit(OpCodes.Dup);
-                        }
-                    }
-
-                    generator.Emit(OpCodes.Ldarg_0);
-                    generator.Emit(OpCodes.Ldfld, _interceptorsField);
-                    generator.Emit(OpCodes.Ldloc_0);
-                    generator.Emit(OpCodes.Newobj, ReflectionStaticValue.InterceptorHelper_Constructor);
-                    generator.Emit(OpCodes.Call, ReflectionStaticValue.InterceptorHelper_Intercept);
-
-                    if (methodInfo.ReturnType == ReflectionStaticValue.TypeVoid)
-                        generator.Emit(OpCodes.Pop);
-                    generator.Emit(OpCodes.Ret);
+                if (typeArguments.Length > 0)
+                    generator.Emit(OpCodes.Newobj, TypeBuilder.GetConstructor(makeGenericType, ctor));
+                else
+                    generator.Emit(OpCodes.Newobj, ctor);
 
 
+                generator.Emit(OpCodes.Stloc_0);
 
-                    generator.MarkLabel(withoutInterceptor);
-                
-
-                generator.Emit(OpCodes.Ldarg_0);
-                
+                //Set Original
+                generator.Emit(OpCodes.Ldloc_0);
+                generator.Ldarg(0);
                 generator.Emit(OpCodes.Ldfld, _fieldBuilder);
-                
+                generator.Emit(OpCodes.Callvirt, ReflectionStaticValue.Invocation_Original_Set);
+
+                generator.Emit(OpCodes.Ldloc_0);
+
+                //Set Arguments
+                generator.CreateArray(ReflectionStaticValue.TypeObject, newMethodParameterTypes.Length);
+
+                if (newMethodParameterTypes.Length > 0)
+                {
+                    generator.Emit(OpCodes.Dup);
+                    for (var i = 1; i <= newMethodParameterTypes.Length; i++)
+                    {
+
+                        generator.Ldc_I4(i - 1);
+                        generator.Ldarg(i);
+
+                        Type parameterType = newMethodParameterTypes[i - 1];
+                        if (parameterType.IsValueType || parameterType.IsGenericParameter)
+                        {
+                            generator.Emit(OpCodes.Box, parameterType);
+                        }
+
+                        generator.Emit(OpCodes.Stelem_Ref);
+                        if (methodParameters.Length != i)
+                            generator.Emit(OpCodes.Dup);
+                    }
+                }
+
+                generator.Emit(OpCodes.Callvirt, ReflectionStaticValue.Invocation_Arguments_Set);
+
+
+
+
+                generator.Emit(OpCodes.Ldloc_0);
+                //generator.Emit(OpCodes.Dup);
+                //generator.Ldarg(0);
+                //generator.Emit(OpCodes.Ldfld, _fieldBuilder);
+                //if (typeArguments.Length > 0)
+                //    generator.Emit(OpCodes.Stfld, TypeBuilder.GetField(makeGenericType, fbs[0]));
+                //else
+                //    generator.Emit(OpCodes.Stfld, fbs[0]);
+                if (methodParameters.Length > 0)
+                {
+                    generator.Emit(OpCodes.Dup);
+
+                    for (var i = 1; i <= methodParameters.Length; i++)
+                    {
+                        generator.Ldarg(i);
+
+                        if (typeArguments.Length > 0)
+                            generator.Emit(OpCodes.Stfld, TypeBuilder.GetField(makeGenericType, fbs[i]));
+                        else
+                            generator.Emit(OpCodes.Stfld, fbs[i]);
+                        if (methodParameters.Length != i)
+                            generator.Emit(OpCodes.Dup);
+                    }
+                }
+
+                generator.Ldarg(0);
+                generator.Emit(OpCodes.Ldfld, _interceptorsField);
+                generator.Emit(OpCodes.Ldloc_0);
+                generator.Emit(OpCodes.Newobj, ReflectionStaticValue.InterceptorHelper_Constructor);
+                generator.Emit(OpCodes.Call, ReflectionStaticValue.InterceptorHelper_Intercept);
+
+                if (methodInfo.ReturnType == ReflectionStaticValue.TypeVoid)
+                    generator.Emit(OpCodes.Pop);
+                generator.Emit(OpCodes.Ret);
+
+
+
+                generator.MarkLabel(withoutInterceptor);
+                #endregion
+
+                generator.Ldarg(0);
+
+                generator.Emit(OpCodes.Ldfld, _fieldBuilder);
+
                 for (var i = 1; i <= methodParameters.Length; i++)
                 {
                     generator.Ldarg(i);
                 }
-                
+
                 generator.Emit(OpCodes.Callvirt, methodInfo);
-                
+
 
                 generator.Emit(OpCodes.Ret);
 
@@ -285,7 +289,7 @@ namespace ProxyGenerator.Core
         }
 
         
-        private Type CreateNestedType(ParameterInfo[] methodParameters2, MethodInfo methodInfo, out FieldBuilder[] fb, out ConstructorBuilder defineDefaultConstructor)
+        private Type CreateNestedType(ParameterInfo[] methodParameters2, MethodInfo methodInfo, out FieldInfo[] fb, out ConstructorBuilder defineDefaultConstructor)
         {
             TypeBuilder defineNestedType = _dynamicModule.DefineType($"MT__{methodInfo.Name}_{Guid.NewGuid()}",  TypeAttributes.Public);
 
@@ -348,11 +352,13 @@ namespace ProxyGenerator.Core
                 }
             }
             
-            fb = new FieldBuilder[parametersType.Length + 1];
+            fb = new FieldInfo[parametersType.Length + 1];
             
             
 
-            fb[0] = defineNestedType.DefineField("_target", targetFieldType, FieldAttributes.Public);
+            // fb[0] = defineNestedType.DefineField("_target2", targetFieldType, FieldAttributes.Public);
+            fb[0] = ReflectionStaticValue.TypeInvocation.GetField("_target",
+                BindingFlags.Instance | BindingFlags.NonPublic);
             for (var i = 1; i <= parametersType.Length; i++)
             {
                 Type parameterType = parametersType[i - 1];
@@ -365,7 +371,7 @@ namespace ProxyGenerator.Core
             defineDefaultConstructor =
                 defineNestedType.DefineConstructor(MethodAttributes.Public, CallingConventions.Standard, null);
             ILGenerator constructorIlGenerator = defineDefaultConstructor.GetILGenerator();
-            constructorIlGenerator.Emit(OpCodes.Ldarg_0);
+            constructorIlGenerator.Ldarg(0);
             constructorIlGenerator.Emit(OpCodes.Call,ReflectionStaticValue.Invocation_Constructor);
             constructorIlGenerator.Emit(OpCodes.Ret);
 
@@ -397,12 +403,14 @@ namespace ProxyGenerator.Core
             ILGenerator ilGenerator = defineMethod.GetILGenerator();
             ilGenerator.DeclareLocal(ReflectionStaticValue.TypeObject);
 
-            ilGenerator.Emit(OpCodes.Ldarg_0);
+            ilGenerator.Ldarg(0);
             ilGenerator.Emit(OpCodes.Ldfld, fb[0]);
+            ilGenerator.Emit(OpCodes.Castclass,targetFieldType);
+            
             
             for (var i = 1; i <= parametersType.Length; i++)
             {
-                ilGenerator.Emit(OpCodes.Ldarg_0);
+                ilGenerator.Ldarg(0);
                 ilGenerator.Emit(OpCodes.Ldfld, fb[i]);
                 
             }

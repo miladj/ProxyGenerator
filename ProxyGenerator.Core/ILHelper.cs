@@ -28,7 +28,7 @@ namespace ProxyGenerator.Core
         }
         public static void CallObjectCtorAsBaseCtor(this ILGenerator ilGenerator)
         {
-            ilGenerator.Emit(OpCodes.Ldarg_0);
+            ilGenerator.Ldarg(0);
             ilGenerator.Emit(OpCodes.Call, ReflectionStaticValue.Object_Constructor);
         }
         public static void CreateArray(this ILGenerator ilGenerator, Type arrayType, int size)
