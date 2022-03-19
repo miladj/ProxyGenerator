@@ -5,7 +5,7 @@ namespace ProxyGenerator.Core
 {
     public interface IInvocation
     {
-        object[] Arguments { get; }
+        long ArgumentCount { get; }
 
         MethodInfo Method { get; }
 
@@ -16,6 +16,7 @@ namespace ProxyGenerator.Core
         Type TargetType { get; }
 
         void SetArgument(uint index, object value);
+        object GetArgument(uint index);
 
     }
 }

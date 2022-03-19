@@ -88,7 +88,7 @@ namespace ProxyGenerator.Test
             const string expectedRv = "OK";
             mock.Setup(x => x.Test(90, 1200)).Returns(expectedRv);
             var interceptorMock = new Mock<PassThroughInterceptor>();
-            interceptorMock.Setup(x => x.Intercept(It.Is<IInvocation>(x=>x.Arguments[0].Equals(90) && x.Arguments[1].Equals(1200)), It.IsAny<Func<object>>()))
+            interceptorMock.Setup(x => x.Intercept(It.Is<IInvocation>(x=>x.GetArgument(0).Equals(90) && x.GetArgument(1).Equals(1200)), It.IsAny<Func<object>>()))
                 .Returns((IInvocation _, Func<object> next) => next());
             ServiceCollection sc = new ServiceCollection();
             sc.AddSingleton(typeof(ITestInterceptor), mock.Object);
@@ -143,6 +143,34 @@ namespace ProxyGenerator.Test
 
             string test = instance.Test(1,2,3,4,5,6);
             Assert.AreEqual("OK",test);
+
+            mock.VerifyAll();
+            mockInterceptor.VerifyAll();
+        }
+        [Test]
+        public void TestMethod_ManyParameters_CheckInvocationData()
+        {
+            
+            var mock = new Mock<ITestInterceptor2>();
+            var mockInterceptor = new Mock<IInterceptor>();
+            mockInterceptor.Setup(x => x.Intercept(It.IsAny<IInvocation>(), It.IsAny<Func<object>>()))
+                .Returns((IInvocation invocation, Func<object> next) =>
+                {
+                    Assert.AreEqual(invocation.ArgumentCount,6);
+                    for (uint i = 0; i < 6; i++)
+                    {
+                        Assert.AreEqual(invocation.GetArgument(i), i+1);
+                    }
+                    
+                    return next();
+                }).Verifiable();
+            mock.Setup(x => x.Test(It.IsIn(1), It.IsIn(2), It.IsIn(3), It.IsIn(4), It.IsIn(5), It.IsIn(6))).Returns("OK").Verifiable();
+            Type proxy = ProxyMaker.CreateProxyType(typeof(ITestInterceptor2));
+            var instance = Activator.CreateInstance(proxy, new object[] { mock.Object, new IInterceptor[] { mockInterceptor.Object } }) as ITestInterceptor2;
+            Assert.IsNotNull(instance);
+
+            string test = instance.Test(1, 2, 3, 4, 5, 6);
+            Assert.AreEqual("OK", test);
 
             mock.VerifyAll();
             mockInterceptor.VerifyAll();

@@ -200,49 +200,7 @@ namespace ProxyGenerator.Core
                 generator.Emit(OpCodes.Ldfld, _fieldBuilder);
                 generator.Emit(OpCodes.Callvirt, ReflectionStaticValue.Invocation_Original_Set);
 
-                generator.Emit(OpCodes.Ldloc_0);
-
-                //Set Arguments
-                generator.CreateArray(ReflectionStaticValue.TypeObject, newMethodParameterTypes.Length);
-
-                if (newMethodParameterTypes.Length > 0)
-                {
-                    generator.Emit(OpCodes.Dup);
-                    for (var i = 1; i <= newMethodParameterTypes.Length; i++)
-                    {
-                        generator.Ldc_I4(i - 1);
-                        if (methodParameters[i - 1].IsOut)
-                        {
-                            generator.Emit(OpCodes.Ldnull);
-                        }
-                        else
-                        {
-                            
-                            generator.Ldarg(i);
-
-                            Type parameterType = newMethodParameterTypes[i - 1];
-                            if (parameterType.IsByRef)
-                            {
-                                parameterType = parameterType.GetElementType();
-                                generator.Emit(OpCodes.Ldobj, parameterType);
-                            }
-
-                            if (parameterType.NeedUnboxing())
-                            {
-                                generator.Emit(OpCodes.Box, parameterType);
-                            }
-                        }
-
-                        generator.Emit(OpCodes.Stelem_Ref);
-                        if (methodParameters.Length != i)
-                            generator.Emit(OpCodes.Dup);
-                    }
-                }
-
-                generator.Emit(OpCodes.Callvirt, ReflectionStaticValue.Invocation_Arguments_Set);
-
-
-
+                
 
                 generator.Emit(OpCodes.Ldloc_0);
                 //generator.Emit(OpCodes.Dup);
@@ -417,6 +375,7 @@ namespace ProxyGenerator.Core
                 defineNestedType.DefineConstructor(MethodAttributes.Public, CallingConventions.Standard, null);
             ILGenerator constructorIlGenerator = defineDefaultConstructor.GetILGenerator();
             constructorIlGenerator.Ldarg(0);
+            constructorIlGenerator.Ldc_I4(parametersType.Length);
             constructorIlGenerator.Emit(OpCodes.Call,ReflectionStaticValue.Invocation_Constructor);
             constructorIlGenerator.Emit(OpCodes.Ret);
 
@@ -469,6 +428,31 @@ namespace ProxyGenerator.Core
                 ilGenerator.Emit(OpCodes.Ldnull);
             ilGenerator.Emit(OpCodes.Ret);
 
+            #region Create Invocation.GetArgument Method
+            MethodBuilder implementForGetArgumentMethod = defineNestedType.DefineMethod(ReflectionStaticValue.Invocation_InternalGetArgument_Method.Name, MethodAttributes.Public | MethodAttributes.Virtual);
+            implementForGetArgumentMethod.SetParameters(ReflectionStaticValue.Invocation_InternalGetArgument_Method.GetParameters().Select(x => x.ParameterType).ToArray());
+            implementForGetArgumentMethod.SetReturnType(ReflectionStaticValue.Invocation_InternalGetArgument_Method.ReturnType);
+            ILGenerator getArgumentMethodIl = implementForGetArgumentMethod.GetILGenerator();
+
+
+            for (var i = 1; i <= parametersType.Length; i++)
+            {
+                var fieldInfo = fb[i];
+                var fieldType = fieldInfo.FieldType;
+                Label nextIfLabel = getArgumentMethodIl.DefineLabel();
+                getArgumentMethodIl.Ldarg(1);
+                getArgumentMethodIl.Ldc_I4(i - 1);
+                getArgumentMethodIl.Emit(OpCodes.Bne_Un, nextIfLabel);
+                getArgumentMethodIl.Ldarg(0);
+                getArgumentMethodIl.Emit(OpCodes.Ldfld, fieldInfo);
+                if(fieldType.NeedUnboxing())
+                    getArgumentMethodIl.Emit(OpCodes.Box, fieldType);
+                getArgumentMethodIl.Emit(OpCodes.Ret);
+                getArgumentMethodIl.MarkLabel(nextIfLabel);
+            }
+            getArgumentMethodIl.Emit(OpCodes.Ldnull);
+            getArgumentMethodIl.Emit(OpCodes.Ret);
+            #endregion
 
             #region Create Invocation.SetArgument Method
             MethodBuilder implementForSetArgumentMethod = defineNestedType.DefineMethod(ReflectionStaticValue.Invocation_InternalSetArgument_Method.Name, MethodAttributes.Public | MethodAttributes.Virtual);
@@ -493,6 +477,9 @@ namespace ProxyGenerator.Core
             }
             setArgumentMethodIl.Emit(OpCodes.Ret);
             #endregion
+
+
+            
 
             defineNestedType.CreateType();
             

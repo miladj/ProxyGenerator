@@ -99,7 +99,7 @@ interceptors are called in a pipeline. and the action can be perform before and 
 
 ## Limitations
 1. no support for generic constraints.
-2. no support for ref, in, out method parameters.
+2. ~~no support for ref, in, out method parameters.
 3. ~~no supoprt for changing arguments in interceptors.
 4. ~~no support for changing target in runtime.~~
 5. there is no cache for generated proxy.

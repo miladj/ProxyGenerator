@@ -5,16 +5,12 @@ namespace ProxyGenerator.Core
 {
     public abstract class Invocation:IInvocation,IDefaultInvocation
     {
-        public Invocation()
+        public Invocation(int argumentCount)
         {
-
+            ArgumentCount = argumentCount;
         }
 
-        public object[] Arguments
-        {
-            get => _arguments;
-            set => _arguments = value;
-        }
+        public long ArgumentCount { get; } 
 
         public abstract MethodInfo Method { get; }
 
@@ -28,20 +24,21 @@ namespace ProxyGenerator.Core
         }
 
         protected object _target;
-        private object[] _arguments;
 
         public Type TargetType => Target?.GetType();
 
         public void SetArgument(uint index, object value)
+        { 
+            InternalSetArgument(index, value);
+        }
+
+        public object GetArgument(uint index)
         {
-            if (_arguments!=null)
-            {
-                _arguments[index] = value;
-                InternalSetArgument(index, value);
-            }
+            return InternalGetArgument(index);
         }
 
         protected internal abstract void InternalSetArgument(uint index, object value);
+        protected internal abstract object InternalGetArgument(uint index);
         public abstract object Invoke();
     }
 }
