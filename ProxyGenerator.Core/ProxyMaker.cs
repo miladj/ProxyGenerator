@@ -210,14 +210,27 @@ namespace ProxyGenerator.Core
                     generator.Emit(OpCodes.Dup);
                     for (var i = 1; i <= newMethodParameterTypes.Length; i++)
                     {
-
                         generator.Ldc_I4(i - 1);
-                        generator.Ldarg(i);
-
-                        Type parameterType = newMethodParameterTypes[i - 1];
-                        if (parameterType.IsValueType || parameterType.IsGenericParameter)
+                        if (methodParameters[i - 1].IsOut)
                         {
-                            generator.Emit(OpCodes.Box, parameterType);
+                            generator.Emit(OpCodes.Ldnull);
+                        }
+                        else
+                        {
+                            
+                            generator.Ldarg(i);
+
+                            Type parameterType = newMethodParameterTypes[i - 1];
+                            if (parameterType.IsByRef)
+                            {
+                                parameterType = parameterType.GetElementType();
+                                generator.Emit(OpCodes.Ldobj, parameterType);
+                            }
+
+                            if (parameterType.NeedUnboxing())
+                            {
+                                generator.Emit(OpCodes.Box, parameterType);
+                            }
                         }
 
                         generator.Emit(OpCodes.Stelem_Ref);
@@ -246,7 +259,9 @@ namespace ProxyGenerator.Core
                     for (var i = 1; i <= methodParameters.Length; i++)
                     {
                         generator.Ldarg(i);
-
+                        Type parameterType = newMethodParameterTypes[i-1];
+                        if (parameterType.IsByRef)
+                            generator.Emit(OpCodes.Ldobj, parameterType.GetElementType());
                         if (typeArguments.Length > 0)
                             generator.Emit(OpCodes.Stfld, TypeBuilder.GetField(makeGenericType, fbs[i]));
                         else
@@ -261,6 +276,30 @@ namespace ProxyGenerator.Core
                 generator.Emit(OpCodes.Ldloc_0);
                 generator.Emit(OpCodes.Newobj, ReflectionStaticValue.InterceptorHelper_Constructor);
                 generator.Emit(OpCodes.Call, ReflectionStaticValue.InterceptorHelper_Intercept);
+
+                if (methodParameters.Length > 0)
+                {
+                    for (var i = 1; i <= methodParameters.Length; i++)
+                    {
+                        //break;
+                        if(!newMethodParameterTypes[i-1].IsByRef)
+                            continue;
+
+                        generator.Ldarg(i);
+                        generator.Emit(OpCodes.Ldloc_0);
+
+                        if (typeArguments.Length > 0)
+                        {
+                            generator.Emit(OpCodes.Ldfld, TypeBuilder.GetField(makeGenericType, fbs[i]));
+                            
+                        }
+                        else
+                        {
+                            generator.Emit(OpCodes.Ldfld, fbs[i]);
+                        }
+                        generator.Emit(OpCodes.Stobj, newMethodParameterTypes[i - 1].GetElementType());
+                    }
+                }
 
                 if (methodInfo.ReturnType == ReflectionStaticValue.TypeVoid)
                     generator.Emit(OpCodes.Pop);
@@ -316,6 +355,8 @@ namespace ProxyGenerator.Core
 
                 Type GetNewType(Type oldType)
                 {
+                    if (oldType.IsByRef)
+                        oldType = oldType.GetElementType();
                     var indexOf = genericArgument.FindIndex(x => x == oldType);
                     if (indexOf >= 0)
                         return genericTypeParameterBuilders[indexOf];
@@ -325,7 +366,10 @@ namespace ProxyGenerator.Core
                 
                 for (var i = 0; i < parametersType.Length; i++)
                 {
-                    parametersType[i] = GetNewType(parametersType[i]);
+                    Type oldType = parametersType[i];
+                    parametersType[i] = GetNewType(oldType);
+                    if (oldType.IsByRef)
+                        parametersType[i] = parametersType[i].MakeByRefType();
                 }
             
                 
@@ -361,9 +405,10 @@ namespace ProxyGenerator.Core
                 BindingFlags.Instance | BindingFlags.NonPublic);
             for (var i = 1; i <= parametersType.Length; i++)
             {
-                Type parameterType = parametersType[i - 1];
-                
-                FieldBuilder fieldBuilder = defineNestedType.DefineField("__fl" + i, parameterType,
+                Type fieldType = parametersType[i - 1];
+                if(fieldType.IsByRef)
+                    fieldType = fieldType.GetElementType();
+                FieldBuilder fieldBuilder = defineNestedType.DefineField("__fl" + i, fieldType,
                     FieldAttributes.Public);
                 fb[i] = fieldBuilder;
             }
@@ -412,8 +457,9 @@ namespace ProxyGenerator.Core
             
             for (var i = 1; i <= parametersType.Length; i++)
             {
+                Type type = parametersType[i - 1];
                 ilGenerator.Ldarg(0);
-                ilGenerator.Emit(OpCodes.Ldfld, fb[i]);
+                ilGenerator.Emit(type.IsByRef? OpCodes.Ldflda:OpCodes.Ldfld, fb[i]);
                 
             }
             
@@ -440,7 +486,7 @@ namespace ProxyGenerator.Core
                 setArgumentMethodIl.Emit(OpCodes.Bne_Un, nextIfLabel);
                 setArgumentMethodIl.Ldarg(0);
                 setArgumentMethodIl.Ldarg(2);
-                setArgumentMethodIl.Emit(fieldType.IsValueType ? OpCodes.Unbox_Any : OpCodes.Castclass, fieldType);
+                setArgumentMethodIl.Emit(fieldType.NeedUnboxing() ? OpCodes.Unbox_Any : OpCodes.Castclass, fieldType);
                 setArgumentMethodIl.Emit(OpCodes.Stfld, fieldInfo);
                 setArgumentMethodIl.Emit(OpCodes.Ret);
                 setArgumentMethodIl.MarkLabel(nextIfLabel);

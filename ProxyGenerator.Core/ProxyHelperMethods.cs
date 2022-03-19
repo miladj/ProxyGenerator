@@ -24,5 +24,8 @@ namespace ProxyGenerator.Core
             return map.TargetMethods[index];
         }
 
+        public static bool NeedUnboxing(this Type type) => type.IsValueType || type.IsGenericParameter;
+        
+
     }
 }
