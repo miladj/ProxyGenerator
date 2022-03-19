@@ -390,12 +390,14 @@ namespace ProxyGenerator.Core
 
             staticCtorIL.Emit(OpCodes.Ret);
 
+            #region Create Invocation.Method Property
             MethodBuilder implementGetForMethod = defineNestedType.DefineMethod(ReflectionStaticValue.Invocation_Method_Get.Name,MethodAttributes.Public|MethodAttributes.Virtual);
             implementGetForMethod.SetReturnType(ReflectionStaticValue.MethodInfoType);
             ILGenerator getMethodIL = implementGetForMethod.GetILGenerator();
             getMethodIL.Emit(OpCodes.Ldsfld,methodInfoStaticField);
             getMethodIL.Emit(OpCodes.Ret);
-
+            #endregion
+            
             MethodBuilder defineMethod =
                 defineNestedType.DefineMethod(nameof(IDefaultInvocation.Invoke), MethodAttributes.Public | MethodAttributes.Virtual,null,null);
             defineMethod.SetReturnType(ReflectionStaticValue.TypeObject);
@@ -420,7 +422,32 @@ namespace ProxyGenerator.Core
             if (methodInfo.ReturnType == ReflectionStaticValue.TypeVoid)
                 ilGenerator.Emit(OpCodes.Ldnull);
             ilGenerator.Emit(OpCodes.Ret);
+
+
+            #region Create Invocation.SetArgument Method
+            MethodBuilder implementForSetArgumentMethod = defineNestedType.DefineMethod(ReflectionStaticValue.Invocation_InternalSetArgument_Method.Name, MethodAttributes.Public | MethodAttributes.Virtual);
+            implementForSetArgumentMethod.SetParameters(ReflectionStaticValue.Invocation_InternalSetArgument_Method.GetParameters().Select(x=>x.ParameterType).ToArray());
+            ILGenerator setArgumentMethodIl = implementForSetArgumentMethod.GetILGenerator();
             
+            
+            for (var i = 1; i <= parametersType.Length; i++)
+            {
+                var fieldInfo = fb[i];
+                var fieldType= fieldInfo.FieldType;
+                Label nextIfLabel = setArgumentMethodIl.DefineLabel();
+                setArgumentMethodIl.Ldarg(1);
+                setArgumentMethodIl.Ldc_I4(i-1);
+                setArgumentMethodIl.Emit(OpCodes.Bne_Un, nextIfLabel);
+                setArgumentMethodIl.Ldarg(0);
+                setArgumentMethodIl.Ldarg(2);
+                setArgumentMethodIl.Emit(fieldType.IsValueType ? OpCodes.Unbox_Any : OpCodes.Castclass, fieldType);
+                setArgumentMethodIl.Emit(OpCodes.Stfld, fieldInfo);
+                setArgumentMethodIl.Emit(OpCodes.Ret);
+                setArgumentMethodIl.MarkLabel(nextIfLabel);
+            }
+            setArgumentMethodIl.Emit(OpCodes.Ret);
+            #endregion
+
             defineNestedType.CreateType();
             
             return defineNestedType;

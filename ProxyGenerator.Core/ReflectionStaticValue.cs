@@ -56,6 +56,9 @@ namespace ProxyGenerator.Core
         public static readonly MethodInfo Invocation_Arguments_Set =
             TypeInvocation.GetProperty(nameof(Invocation.Arguments))!.SetMethod!;
 
+        public static readonly MethodInfo Invocation_InternalSetArgument_Method =
+            TypeInvocation.GetMethod(nameof(Invocation.InternalSetArgument),BindingFlags.NonPublic|BindingFlags.Instance)!;
+
         #endregion
 
     }

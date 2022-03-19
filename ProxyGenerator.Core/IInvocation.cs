@@ -15,5 +15,7 @@ namespace ProxyGenerator.Core
 
         Type TargetType { get; }
 
+        void SetArgument(uint index, object value);
+
     }
 }
