@@ -227,13 +227,6 @@ namespace ProxyGenerator.Aspnet.Test
             
         }
 
-        [Test]
-        public void DecoratingNonRegisteredServiceThrows()
-        {
-            //TODO:
-            //Assert.Throws<MissingTypeRegistrationException>(() => ConfigureProvider(services => services.Decorate<IDecoratedService, Decorator>()));
-        }
-
         public interface IDecoratedService
         {
             void Test();

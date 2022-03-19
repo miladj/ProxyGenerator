@@ -22,10 +22,7 @@ namespace ProxyGenerator.Test
         public void TestRefMethod()
         {
             Mock<IRefTestMethod> mock1 = new Mock<IRefTestMethod>();
-            
-
-
-
+ 
             mock1.Setup(x => x.TestMethod(ref It.Ref<int>.IsAny)).Callback(new TestMethodRef<int>(((ref int bar) => bar = 100)));
 
             var mockInterceptor = new Mock<IInterceptor>();
@@ -48,8 +45,6 @@ namespace ProxyGenerator.Test
         public void TestRefGenericTestMethod()
         {
             Mock<IRefGenericTestMethod> mock1 = new Mock<IRefGenericTestMethod>();
-            
-
 
             mock1.Setup(x => x.TestMethod(ref It.Ref<int>.IsAny)).Callback(new TestMethodRef<int>(((ref int bar) => bar = 100)));
 

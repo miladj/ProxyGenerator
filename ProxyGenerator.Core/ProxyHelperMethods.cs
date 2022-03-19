@@ -5,13 +5,6 @@ namespace ProxyGenerator.Core
 {
     public static class ProxyHelperMethods
     {
-        // public static void FillInvocationProperties(Invocation invocation)
-        // {
-        //     //TODO:Bottleneck
-        //     invocation.TargetType = invocation.Original.GetType();
-        //     // invocation.MethodInvocationTarget = GetImplMethodInfo(invocation.TargetType, invocation.Method);
-        //
-        // }
         public static MethodInfo GetImplMethodInfo(Type targetType,MethodInfo interfaceMethodInfo)
         {
             //TODO:

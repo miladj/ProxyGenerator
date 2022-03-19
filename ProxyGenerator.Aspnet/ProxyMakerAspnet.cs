@@ -26,12 +26,7 @@ namespace ProxyGenerator.Aspnet
 
         private ProxyMakerAspnet(Type typeToProxy, Type implementType, Type decoratorType =null, Type[] interceptorTypes = null) : base(typeToProxy)
         {
-            if (implementType == null)
-            {
-                //TODO: throw exception
-                throw new NullReferenceException("ImplementType");
-            }
-            this._implementType = implementType;
+            this._implementType = implementType ?? throw new NullReferenceException(nameof(implementType));
             this._decoratorType = decoratorType;
             this._interceptorTypes = interceptorTypes;
             _serviceProviderField = _typeBuilder.DefineField("___Iserviceprovider", ReflectionStaticValue.TypeIServiceProvider, FieldAttributes.Private);

@@ -1,6 +1,5 @@
 using System;
 using System.Reflection;
-using System.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using NUnit.Framework;
