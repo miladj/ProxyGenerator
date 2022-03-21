@@ -14,9 +14,8 @@ namespace ProxyGenerator.Aspnet
         }
         public static IServiceCollection Decorate(this IServiceCollection serviceCollection,Type serviceType,Type decoratorType)
         {
-            //TODO:Exception
             if (!IsAssignableTo(decoratorType, serviceType))
-                throw new Exception("Not compatible");
+                throw new NotSupportedException("DecoratorType must implement ServiceType");
             for (var index = 0; index < serviceCollection.Count; index++)
             {
                 

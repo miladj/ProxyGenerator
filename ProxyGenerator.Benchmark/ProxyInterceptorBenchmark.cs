@@ -64,10 +64,10 @@ namespace ProxyGenerator.Benchmark
             }
         }
         [Benchmark]
-        public void NonProxyCall() => _manualCreatedInstance.Test();
+        public void CompileTimeProxyCall() => _manualCreatedInstance.Test();
         [Benchmark]
         public void ProxyCall() => _generatedProxyInstance.Test();
         [Benchmark]
-        public void WindsOrProxyCall() => _windsorGeneratedProxy.Test();
+        public void WindsorProxyCall() => _windsorGeneratedProxy.Test();
     }
 }
