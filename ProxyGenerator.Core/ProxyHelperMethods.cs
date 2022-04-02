@@ -8,13 +8,22 @@ namespace ProxyGenerator.Core
         public static MethodInfo GetImplMethodInfo(Type targetType,MethodInfo interfaceMethodInfo)
         {
             //TODO:
-            if (!interfaceMethodInfo.DeclaringType.IsInterface)
+            var methodInfo = interfaceMethodInfo;
+            if (!methodInfo.DeclaringType.IsInterface)
                 return null;
-            var map = targetType.GetInterfaceMap(interfaceMethodInfo.DeclaringType);
-            var index = Array.IndexOf(map.InterfaceMethods, interfaceMethodInfo);
+            var map = targetType.GetInterfaceMap(methodInfo.DeclaringType);
+            if (interfaceMethodInfo.IsGenericMethod)
+                methodInfo = interfaceMethodInfo.GetGenericMethodDefinition();
+            var index = Array.IndexOf(map.InterfaceMethods, methodInfo);
             if (index < 0)
                 return null;
-            return map.TargetMethods[index];
+            MethodInfo mapTargetMethod = map.TargetMethods[index];
+            if (interfaceMethodInfo.IsGenericMethod)
+            {
+                Type[] genericArguments = interfaceMethodInfo.GetGenericArguments();
+                return mapTargetMethod.MakeGenericMethod(genericArguments);
+            }
+            return mapTargetMethod;
         }
 
         public static bool NeedUnboxing(this Type type) => type.IsValueType || type.IsGenericParameter;

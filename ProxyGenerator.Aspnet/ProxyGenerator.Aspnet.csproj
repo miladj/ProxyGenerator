@@ -8,7 +8,13 @@
     <!--<Compile Include="..\ProxyGenerator.Core\*.cs" />-->
     <Compile Include="..\ProxyGenerator.Core\**\*.cs"  Exclude="..\ProxyGenerator.Core\obj\**"/>
   </ItemGroup>
-  <ItemGroup>
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net5.0'">
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.2" />
+  </ItemGroup>
+  <ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.1'">
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="3.1.23" />
+  </ItemGroup>
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net6.0' ">
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0" />
   </ItemGroup>
   <ItemGroup Condition=" '$(TargetFramework)' == 'net461'">
@@ -16,5 +22,6 @@
   </ItemGroup>
   <ItemGroup Condition=" '$(TargetFramework)' == 'net461' or  '$(TargetFramework)' == 'netstandard2.1'">
     <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0" />
   </ItemGroup>
 </Project>

@@ -261,6 +261,8 @@ namespace ProxyGenerator.Core
 
                 if (methodInfo.ReturnType == ReflectionStaticValue.TypeVoid)
                     generator.Emit(OpCodes.Pop);
+                else
+                    generator.Emit(methodInfo.ReturnType.NeedUnboxing() ? OpCodes.Unbox_Any : OpCodes.Castclass, methodInfo.ReturnType);
                 generator.Emit(OpCodes.Ret);
 
 
@@ -299,7 +301,7 @@ namespace ProxyGenerator.Core
                 genericArgument.AddRange(_genericArguments);
                 
             }
-            
+            Type methodInfoReturnType = methodInfo.ReturnType;
             if (methodInfo.IsGenericMethod)
             {
                 Type[] methodGenericArguments = methodInfo.GetGenericArguments();
@@ -351,6 +353,20 @@ namespace ProxyGenerator.Core
                     }
 
                     targetFieldType = targetFieldType.MakeGenericType(genericArguments);
+                }
+                
+                if (methodInfoReturnType.IsGenericParameter)
+                {
+                    methodInfoReturnType = GetNewType(methodInfoReturnType);
+                }
+                if (methodInfoReturnType.IsGenericType)
+                {
+                    Type[] genericArguments = methodInfoReturnType.GetGenericArguments();
+                    for (var i = 0; i < genericArguments.Length; i++)
+                    {
+                        genericArguments[i] = GetNewType(genericArguments[i]);
+                    }
+                    methodInfoReturnType = methodInfoReturnType.GetGenericTypeDefinition().MakeGenericType(genericArguments);
                 }
             }
             
@@ -426,6 +442,12 @@ namespace ProxyGenerator.Core
             
             if (methodInfo.ReturnType == ReflectionStaticValue.TypeVoid)
                 ilGenerator.Emit(OpCodes.Ldnull);
+            else if(methodInfo.ReturnType.NeedUnboxing())
+            {
+                
+                ilGenerator.Emit( OpCodes.Box, methodInfoReturnType);
+            }
+
             ilGenerator.Emit(OpCodes.Ret);
 
             #region Create Invocation.GetArgument Method

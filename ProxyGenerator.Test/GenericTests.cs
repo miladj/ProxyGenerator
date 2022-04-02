@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using Moq;
 using NUnit.Framework;
 using ProxyGenerator.Core;
@@ -38,6 +39,10 @@ namespace ProxyGenerator.Test
         public interface IGeneric7<T>
         {
             void Test<TM>(TM values);
+        }
+        public interface IGeneric8<T>
+        {
+            TestStruct<TM> Test<TM>(TM methodGeneric, T interfaceGeneric);
         }
         [Test]
         public void VoidZeroParameterMethod()
@@ -157,6 +162,22 @@ namespace ProxyGenerator.Test
             Assert.NotNull(createdObjectFromProxy);
             createdObjectFromProxy.Test("Hello");
             mock.Verify(x => x.Test(It.IsAny<string>()));
+        }
+        public struct TestStruct<T>
+        {
+            public T Item { get; set; }
+        }
+        [Test]
+        public void IGeneric8_Interceptor_Test()
+        {
+            var mock = new Moq.Mock<IGeneric8<string>>();
+
+            mock.Setup(x => x.Test(10, "Hello")).Returns((int x,string y)=>new TestStruct<int>(){Item = x});
+            Type proxy = ProxyMaker.CreateProxyType(typeof(IGeneric8<>));
+            var createdObjectFromProxy = Activator.CreateInstance(proxy.MakeGenericType(typeof(string)), mock.Object, new[] { new PassThroughInterceptor() }) as IGeneric8<string>;
+            Assert.NotNull(createdObjectFromProxy);
+            var result = createdObjectFromProxy.Test<int>(10, "Hello");
+            Assert.AreEqual(10,result.Item);
         }
     }
 }

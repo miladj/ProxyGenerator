@@ -6,10 +6,9 @@ namespace ProxyGenerator.Core
     {
         /// <summary>
         /// Create a type with ctor that accept an <paramref name="typeToProxy"/> Instance
-        /// and an array of <paramref name="interceptorTypes"/>
+        /// and an array of <typeparamref name="IInterceptor"></typeparamref>
         /// </summary>
         /// <param name="typeToProxy">Base type</param>
-        /// <param name="interceptorTypes">Interceptor types</param>
         /// <returns>Proxy Type</returns>
         public static Type CreateProxyType(Type typeToProxy)
         {
