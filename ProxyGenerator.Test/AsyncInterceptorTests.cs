@@ -10,15 +10,34 @@ using ProxyGenerator.Core.Asyncs;
 namespace ProxyGenerator.Test
 {
     public class AsyncInterceptorTests
-    {        
+    {
         public interface ITestAsyncMethod
         {
+            Task TestMethod(string id);
+        }
+        public interface ITestAsyncMethodWithReturnValue
+        {
             Task<string> TestMethod(int id);
-            ValueTask<int> TestMethodValueTask(int id,int id2);
-            ValueTask<T> TestMethodValueTask2<T>(int id,int id2);
+        }
+        public interface ITestAsyncMethodValueTask
+        {
+            ValueTask TestMethodValueTask(decimal id);
+        }
+        public interface ITestAsyncMethodValueTaskWithReturnValue
+        {
+            ValueTask<int> TestMethodValueTask(int id, int id2);
+        }
+        public interface ITestAsyncMethodValueTaskGeneric
+        {
+            ValueTask<T> TestMethodValueTask2<T>(int id, int id2);
         }
 
-        public class AsyncTestMethod : ITestAsyncMethod
+        public class AsyncTestMethod :
+            ITestAsyncMethod,
+            ITestAsyncMethodWithReturnValue, 
+            ITestAsyncMethodValueTaskGeneric, 
+            ITestAsyncMethodValueTaskWithReturnValue, 
+            ITestAsyncMethodValueTask
         {
             public async Task<string> TestMethod(int id)
             {
@@ -38,80 +57,117 @@ namespace ProxyGenerator.Test
                     return m;
                 return default;
             }
+
+            public async ValueTask TestMethodValueTask(decimal id)
+            {
+                await Task.Delay(0);
+            }
+
+            public async Task TestMethod(string id)
+            {
+                await Task.Delay(0);
+            }
         }
         [Test]
         public async Task TestMethodWithAsyncTaskAsync()
         {
             const string expectedRv = "90";
 
-            var mockInterceptor = new Mock<IInterceptor>();
-            var mockAsyncInterceptor = mockInterceptor.As<IInterceptorAsync>();
-            mockAsyncInterceptor.Setup(x => x.InterceptAsync(It.IsAny<IInvocation>(), It.IsAny<Func<Task<string>>>())).Returns(async (IInvocation _, Func<Task<string>> x) => await x());
-            mockInterceptor.Setup(x => x.Intercept(It.IsAny<IInvocation>(), It.IsAny<Func<object>>()))
-                .Returns((IInvocation invocation, Func<object> next) => {
-                    return AsyncHelperExtensions.AsyncHelper(invocation, next, mockAsyncInterceptor.Object);
-                }).Verifiable();
+            var mockAsyncInterceptor = new Mock<IInterceptorAsync>();
+            mockAsyncInterceptor.Setup(x => x.InterceptAsync(It.IsAny<IInvocation>(), It.IsAny<Func<Task<object>>>())).Returns(async (IInvocation _, Func<Task<object>> x) => await x());
+            
 
-            Type proxy = ProxyMaker.CreateProxyType(typeof(ITestAsyncMethod));
-            var instance = Activator.CreateInstance(proxy, new AsyncTestMethod(), new IInterceptor[] { mockInterceptor.Object }) as ITestAsyncMethod;
+            Type proxy = ProxyMaker.CreateProxyType(typeof(ITestAsyncMethodWithReturnValue));
+            var instance = Activator.CreateInstance(proxy, new AsyncTestMethod(), new IInterceptor[] { mockAsyncInterceptor.Object.CreateAsyncInterceptor() }) as ITestAsyncMethodWithReturnValue;
 
             var actualRv = await instance!.TestMethod(90);
 
-            Assert.AreEqual(expectedRv, actualRv); 
+            Assert.AreEqual(expectedRv, actualRv);
 
-            mockInterceptor.VerifyAll();
+            mockAsyncInterceptor.VerifyAll();
+
+        }
+        [Test]
+        public async Task TestMethodWithValueWithoutReturn()
+        {
+            var mockAsyncInterceptor = new Mock<IInterceptorAsync>();
+            mockAsyncInterceptor.Setup(x => x.InterceptAsync(It.IsAny<IInvocation>(), It.IsAny<Func<Task<object>>>())).Returns(async (IInvocation _, Func<Task<object>> x) =>
+            {
+                object i = await x();
+                return i;
+            });
+
+            Type proxy = ProxyMaker.CreateProxyType(typeof(ITestAsyncMethodValueTask));
+            var instance = Activator.CreateInstance(proxy, new AsyncTestMethod(), new IInterceptor[] { mockAsyncInterceptor.Object.CreateAsyncInterceptor() }) as ITestAsyncMethodValueTask;
+
+            await instance!.TestMethodValueTask(10M);
+
+            
+
+            mockAsyncInterceptor.VerifyAll();
+
+        }
+        [Test]
+        public async Task TestMethodWithTaskWithoutReturn()
+        {
+            var mockAsyncInterceptor = new Mock<IInterceptorAsync>();
+            mockAsyncInterceptor.Setup(x => x.InterceptAsync(It.IsAny<IInvocation>(), It.IsAny<Func<Task<object>>>())).Returns(async (IInvocation _, Func<Task<object>> x) =>
+            {
+                object i = await x();
+                return i;
+            });
+
+            Type proxy = ProxyMaker.CreateProxyType(typeof(ITestAsyncMethod));
+            var instance = Activator.CreateInstance(proxy, new AsyncTestMethod(), new IInterceptor[] { mockAsyncInterceptor.Object.CreateAsyncInterceptor() }) as ITestAsyncMethod;
+
+            await instance!.TestMethod("");
+
+
+
+            mockAsyncInterceptor.VerifyAll();
 
         }
         [Test]
         public async Task TestMethodWithAsyncValueTaskAsync()
         {
-
-            var mockInterceptor = new Mock<IInterceptor>();
-            var mockAsyncInterceptor = mockInterceptor.As<IInterceptorAsync>();
-            mockAsyncInterceptor.Setup(x => x.InterceptAsync(It.IsAny<IInvocation>(), It.IsAny<Func<ValueTask<int>>>())).Returns(async (IInvocation _, Func<ValueTask<int>> x) =>
+            var mockAsyncInterceptor = new Mock<IInterceptorAsync>();
+            mockAsyncInterceptor.Setup(x => x.InterceptAsync(It.IsAny<IInvocation>(), It.IsAny<Func<Task<object>>>())).Returns(async (IInvocation _, Func<Task<object>> x) =>
             {
-                int i = await x();
+                object i = await x();
                 return i;
             });
-            mockInterceptor
-                .Setup(x => x.Intercept(It.IsAny<IInvocation>(), It.IsAny<Func<object>>()))
-                .Returns((IInvocation invocation, Func<object> next) => AsyncHelperExtensions.AsyncHelper(invocation, next, mockAsyncInterceptor.Object))
-                .Verifiable();
 
-            Type proxy = ProxyMaker.CreateProxyType(typeof(ITestAsyncMethod));
-            var instance = Activator.CreateInstance(proxy, new AsyncTestMethod(), new IInterceptor[] { mockInterceptor.Object }) as ITestAsyncMethod;
+            Type proxy = ProxyMaker.CreateProxyType(typeof(ITestAsyncMethodValueTaskWithReturnValue));
+            var instance = Activator.CreateInstance(proxy, new AsyncTestMethod(), new IInterceptor[] { mockAsyncInterceptor.Object.CreateAsyncInterceptor() }) as ITestAsyncMethodValueTaskWithReturnValue;
 
-            var actualRv = await instance!.TestMethodValueTask(90,10);
+            var actualRv = await instance!.TestMethodValueTask(90, 10);
 
             Assert.AreEqual(100, actualRv);
-            
-            mockInterceptor.VerifyAll();
+
+            mockAsyncInterceptor.VerifyAll();
 
         }
         [Test]
         public async Task TestMethodWithAsyncValueTaskGenericAsync()
         {
 
-            var mockInterceptor = new Mock<IInterceptor>();
-            var mockAsyncInterceptor = mockInterceptor.As<IInterceptorAsync>();
-            mockAsyncInterceptor.Setup(x => x.InterceptAsync(It.IsAny<IInvocation>(), It.IsAny<Func<ValueTask<int>>>())).Returns(async (IInvocation _, Func<ValueTask<int>> x) =>
+            
+            var mockAsyncInterceptor = new Mock<IInterceptorAsync>();
+            mockAsyncInterceptor.Setup(x => x.InterceptAsync(It.IsAny<IInvocation>(), It.IsAny<Func<Task<object>>>())).Returns(async (IInvocation _, Func<Task<object>> x) =>
             {
-                int i = await x();
+                var i = await x();
                 return i;
             });
-            mockInterceptor
-                .Setup(x => x.Intercept(It.IsAny<IInvocation>(), It.IsAny<Func<object>>()))
-                .Returns((IInvocation invocation, Func<object> next) => AsyncHelperExtensions.AsyncHelper(invocation, next, mockAsyncInterceptor.Object))
-                .Verifiable();
+            
 
-            Type proxy = ProxyMaker.CreateProxyType(typeof(ITestAsyncMethod));
-            var instance = Activator.CreateInstance(proxy, new AsyncTestMethod(), new IInterceptor[] { mockInterceptor.Object }) as ITestAsyncMethod;
+            Type proxy = ProxyMaker.CreateProxyType(typeof(ITestAsyncMethodValueTaskGeneric));
+            var instance = Activator.CreateInstance(proxy, new AsyncTestMethod(), new IInterceptor[] { mockAsyncInterceptor.Object.CreateAsyncInterceptor() }) as ITestAsyncMethodValueTaskGeneric;
 
             var actualRv = await instance!.TestMethodValueTask2<int>(90, 10);
 
             Assert.AreEqual(100, actualRv);
 
-            mockInterceptor.VerifyAll();
+            mockAsyncInterceptor.VerifyAll();
 
         }
         [Test]
@@ -119,28 +175,24 @@ namespace ProxyGenerator.Test
         {
             const string expectedRv = "100";
 
-            var mockInterceptor = new Mock<IInterceptor>();
-            var mockAsyncInterceptor = mockInterceptor.As<IInterceptorAsync>();
+            
+            var mockAsyncInterceptor = new Mock<IInterceptorAsync>();
             mockAsyncInterceptor
-                .Setup(x => x.InterceptAsync(It.IsAny<IInvocation>(), It.IsAny<Func<Task<string>>>()))
-                .Returns(async (IInvocation invocation, Func<Task<string>> x) =>
+                .Setup(x => x.InterceptAsync(It.IsAny<IInvocation>(), It.IsAny<Func<Task<object>>>()))
+                .Returns(async (IInvocation invocation, Func<Task<object>> x) =>
                 {
                     invocation.SetArgument(0,100);//change first parameter to 100 so the result should be 100
                     return await x();
                 });
-            mockInterceptor
-                .Setup(x => x.Intercept(It.IsAny<IInvocation>(), It.IsAny<Func<object>>()))
-                .Returns((IInvocation invocation, Func<object> next) => AsyncHelperExtensions.AsyncHelper(invocation, next, mockAsyncInterceptor.Object))
-                .Verifiable();
 
-            Type proxy = ProxyMaker.CreateProxyType(typeof(ITestAsyncMethod));
-            var instance = Activator.CreateInstance(proxy, new AsyncTestMethod(), new IInterceptor[] { mockInterceptor.Object }) as ITestAsyncMethod;
+            Type proxy = ProxyMaker.CreateProxyType(typeof(ITestAsyncMethodWithReturnValue));
+            var instance = Activator.CreateInstance(proxy, new AsyncTestMethod(), new IInterceptor[] { mockAsyncInterceptor.Object.CreateAsyncInterceptor() }) as ITestAsyncMethodWithReturnValue;
 
             var actualRv = await instance!.TestMethod(90);
 
             Assert.AreEqual(expectedRv, actualRv);
 
-            mockInterceptor.VerifyAll();
+            mockAsyncInterceptor.VerifyAll();
 
         }
     }
