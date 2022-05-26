@@ -1,13 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
+  <Import Project="..\Common.Targets" />
   <PropertyGroup>
-    <TargetFrameworks>netcoreapp3.1;net461;net5.0;net6.0;netstandard2.1</TargetFrameworks>
-    <LangVersion>8.0</LangVersion>
+    <PackageId>ProxyGenerator.Aspnet</PackageId>
   </PropertyGroup>
   <ItemGroup>
     <!--<Compile Include="..\ProxyGenerator.Core\*.cs" />-->
-    <Compile Include="..\ProxyGenerator.Core\**\*.cs"  Exclude="..\ProxyGenerator.Core\obj\**"/>
-  </ItemGroup>
+    <Compile Include="..\ProxyGenerator.Core\**\*.cs" Exclude="..\ProxyGenerator.Core\obj\**" />
+  </ItemGroup> 
   <ItemGroup Condition=" '$(TargetFramework)' == 'net5.0'">
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="5.0.2" />
   </ItemGroup>
@@ -17,11 +16,7 @@
   <ItemGroup Condition=" '$(TargetFramework)' == 'net6.0' ">
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0" />
   </ItemGroup>
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net461'">
-    <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4" />
-  </ItemGroup>
   <ItemGroup Condition=" '$(TargetFramework)' == 'net461' or  '$(TargetFramework)' == 'netstandard2.1'">
-    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="6.0.0" />
   </ItemGroup>
 </Project>

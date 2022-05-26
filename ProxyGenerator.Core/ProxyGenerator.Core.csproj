@@ -1,14 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
+  <Import Project="..\Common.Targets" />
   <PropertyGroup>
-    <TargetFrameworks>netcoreapp3.1;net461;net5.0;net6.0;netstandard2.1</TargetFrameworks>
-    <LangVersion>8.0</LangVersion>
+    <PackageId>ProxyGenerator.Core</PackageId>
   </PropertyGroup>
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net461'">
-    <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4" />
-  </ItemGroup>
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net461' or  '$(TargetFramework)' == 'netstandard2.1'">
-    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
-  </ItemGroup>
-  
 </Project>

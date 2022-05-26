@@ -11,7 +11,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProxyGenerator.Benchmark", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProxyGenerator.Aspnet", "ProxyGenerator.Aspnet\ProxyGenerator.Aspnet.csproj", "{E2D0E0C2-F83D-415F-9C84-5831C39402C4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ProxyGenerator.Aspnet.Test", "ProxyGenerator.Aspnet.Test\ProxyGenerator.Aspnet.Test.csproj", "{5E939929-D4AE-46D6-AE2B-4FAC5D29AF3D}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProxyGenerator.Aspnet.Test", "ProxyGenerator.Aspnet.Test\ProxyGenerator.Aspnet.Test.csproj", "{5E939929-D4AE-46D6-AE2B-4FAC5D29AF3D}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{305E45B8-1808-4D30-83AF-776E3143A97D}"
+	ProjectSection(SolutionItems) = preProject
+		Common.Targets = Common.Targets
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

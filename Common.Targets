@@ -1,0 +1,33 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <TargetFrameworks>netcoreapp3.1;net461;net5.0;net6.0;netstandard2.1</TargetFrameworks>
+    <LangVersion>8.0</LangVersion>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'Release' ">
+    <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+    <PackageProjectUrl>https://github.com/miladj/ProxyGenerator</PackageProjectUrl>
+    <Version>0.0.1-alpha</Version>
+    <Authors>miladj</Authors>
+    <Company />
+    <Product />
+    <Description>This a simple proxy generator written in C#.
+      It uses Dynamic class and ilgenerator to generate a near compile time class that can run as fast as possible.</Description>
+    <RepositoryType>git</RepositoryType>
+    <RepositoryUrl>https://github.com/miladj/ProxyGenerator</RepositoryUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <BeforePack>CustomBeforePackTarget</BeforePack>
+  </PropertyGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net461'">
+    <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4" />
+  </ItemGroup>
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net461' or  '$(TargetFramework)' == 'netstandard2.1'">
+    <PackageReference Include="Microsoft.CSharp" Version="4.7.0" />
+  </ItemGroup>
+  <Target Name="CustomBeforePackTarget">
+    <ItemGroup>
+        <None Include="..\README.md" Pack="true" PackagePath="\"/>
+    </ItemGroup>
+  </Target>
+</Project>
