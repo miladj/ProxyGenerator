@@ -246,7 +246,7 @@ namespace ProxyGenerator.Aspnet.Test
             public IService InjectedService { get; }
             public void Test()
             {
-                Console.WriteLine("Orig");
+                //Console.WriteLine("Orig");
             }
         }
 
@@ -384,7 +384,7 @@ namespace ProxyGenerator.Aspnet.Test
             public IService InjectedService { get; }
             public void Test()
             {
-                Console.WriteLine("Orig");
+                //Console.WriteLine("Orig");
             }
         }
 
@@ -401,7 +401,7 @@ namespace ProxyGenerator.Aspnet.Test
             public IService InjectedService { get; }
             public void Test()
             {
-                Console.WriteLine("Decorator");
+                //Console.WriteLine("Decorator");
                 Inner.Test();
             }
         }

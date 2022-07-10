@@ -104,6 +104,7 @@ var argument=(int)invocation.GetArgument(0);//get first argument of method
 
 ## Nuget
 Install-Package ProxyGenerator.Core
+
 Install-Package ProxyGenerator.Aspnet
 
 
@@ -113,6 +114,7 @@ Install-Package ProxyGenerator.Aspnet
 3. ~~no support for ref, in, out method parameters.~~
 4. ~~no support for changing arguments in interceptors.~~
 5. ~~no support for changing target in runtime.~~
+6. mono doesn't work properly.
 
 
 ## References
