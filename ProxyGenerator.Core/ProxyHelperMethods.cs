@@ -7,7 +7,6 @@ namespace ProxyGenerator.Core
     {
         public static MethodInfo GetImplMethodInfo(Type targetType,MethodInfo interfaceMethodInfo)
         {
-            //TODO:
             var methodInfo = interfaceMethodInfo;
             if (!methodInfo.DeclaringType.IsInterface)
                 return null;

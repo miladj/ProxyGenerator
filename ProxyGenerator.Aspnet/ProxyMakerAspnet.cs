@@ -26,7 +26,7 @@ namespace ProxyGenerator.Aspnet
 
         private ProxyMakerAspnet(Type typeToProxy, Type implementType, Type decoratorType =null, Type[] interceptorTypes = null) : base(typeToProxy)
         {
-            this._implementType = implementType ?? throw new NullReferenceException(nameof(implementType));
+            this._implementType = implementType;
             this._decoratorType = decoratorType;
             this._interceptorTypes = interceptorTypes;
             _serviceProviderField = _typeBuilder.DefineField("___Iserviceprovider", ReflectionStaticValue.TypeIServiceProvider, FieldAttributes.Private);
@@ -36,19 +36,19 @@ namespace ProxyGenerator.Aspnet
         {
             if (this._defineGenericParameters !=null  && _defineGenericParameters.Length>0)
             {
-
-                _implementType = _implementType.MakeGenericType(_defineGenericParameters);
+                if(_implementType!=null)
+                    _implementType = _implementType.MakeGenericType(_defineGenericParameters);
                 _decoratorType = _decoratorType?.MakeGenericType(_defineGenericParameters);
             }
 
-            List<Type> lst = new List<Type>();
-            lst.Add(typeof(IServiceProvider));
+            List<Type> parameterTypesList = new List<Type>();
+            parameterTypesList.Add(typeof(IServiceProvider));
             if (_decoratorType == null)
             {
-                lst.AddRange(_interceptorTypes);
+                parameterTypesList.AddRange(_interceptorTypes);
             }
 
-            Type[] parameterTypes = lst.ToArray();
+            Type[] parameterTypes = parameterTypesList.ToArray();
                 
             
             ConstructorBuilder constructorBuilder = _typeBuilder.DefineConstructor(MethodAttributes.Public, CallingConventions.Standard, parameterTypes);
@@ -69,10 +69,13 @@ namespace ProxyGenerator.Aspnet
             ilGenerator.Ldarg(0);
 
             ilGenerator.Emit(OpCodes.Ldarg_1);
-            ilGenerator.Emit(OpCodes.Ldtoken, _implementType);
+            if(_implementType!=null)
+                ilGenerator.Emit(OpCodes.Ldtoken, _implementType);
+            else
+                ilGenerator.Emit(OpCodes.Ldtoken, _typeToImplement);
             ilGenerator.Emit(OpCodes.Call, ReflectionStaticValue.Type_GetTypeFromHandle);
-            ilGenerator.Emit(OpCodes.Call, ReflectionStaticValue.Array_Empty_OfObjet);
-            ilGenerator.Emit(OpCodes.Call, ReflectionStaticValue.ActivatorCreateInstanceUtilities);
+            ilGenerator.Emit(OpCodes.Call, ReflectionStaticValue.Array_Empty_OfObject);
+            ilGenerator.Emit(OpCodes.Call, ReflectionStaticValue.ActivatorGetServiceOrCreateInstance);
             ilGenerator.Emit(OpCodes.Isinst, _typeToImplement);
             if (_decoratorType != null)
             {
@@ -96,6 +99,7 @@ namespace ProxyGenerator.Aspnet
             {
                 FillInterceptorFieldWithServiceProvider(ilGenerator);
             }
+            
 
             ilGenerator.Emit(OpCodes.Ret);
         }
@@ -103,7 +107,8 @@ namespace ProxyGenerator.Aspnet
         {
             ilGenerator.Ldarg(0);
             ilGenerator.CreateArray(ReflectionStaticValue.TypeIInterceptor, _interceptorTypes.Length);
-            ilGenerator.Emit(OpCodes.Dup);
+            if(_interceptorTypes.Length>0)
+                ilGenerator.Emit(OpCodes.Dup);
             for (var index = 0; index < _interceptorTypes.Length; index++)
             {
                 ilGenerator.Ldc_I4(index);

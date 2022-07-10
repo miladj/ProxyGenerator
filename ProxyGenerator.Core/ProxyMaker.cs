@@ -290,34 +290,34 @@ namespace ProxyGenerator.Core
         
         private Type CreateNestedType(ParameterInfo[] methodParameters2, MethodInfo methodInfo, out FieldInfo[] fb, out ConstructorBuilder defineDefaultConstructor)
         {
-            TypeBuilder defineNestedType = _dynamicModule.DefineType($"MT__{methodInfo.Name}_{Guid.NewGuid()}",  TypeAttributes.Public);
+            TypeBuilder nestedType = _dynamicModule.DefineType($"MT__{methodInfo.Name}_{Guid.NewGuid()}",  TypeAttributes.Public);
 
             Type targetFieldType = _typeToProxy;
 
             Type[] parametersType = methodParameters2.Select(x=>x.ParameterType).ToArray();
-            List<Type> genericArgument = new List<Type>();
+            List<Type> methodGenericArgument = new List<Type>();
             if (_genericArguments != null && _genericArguments.Length > 0)
             {
-                genericArgument.AddRange(_genericArguments);
+                methodGenericArgument.AddRange(_genericArguments);
                 
             }
             Type methodInfoReturnType = methodInfo.ReturnType;
             if (methodInfo.IsGenericMethod)
             {
                 Type[] methodGenericArguments = methodInfo.GetGenericArguments();
-                genericArgument.AddRange(methodGenericArguments);
+                methodGenericArgument.AddRange(methodGenericArguments);
             
             }
 
-            if (genericArgument.Count > 0)
+            if (methodGenericArgument.Count > 0)
             {
-                var genericTypeParameterBuilders = defineNestedType.DefineGenericParameters(genericArgument.Select((x, i) => "K" + i).ToArray());
+                var genericTypeParameterBuilders = nestedType.DefineGenericParameters(methodGenericArgument.Select((x, i) => "K" + i).ToArray());
 
                 Type GetNewType(Type oldType)
                 {
                     if (oldType.IsByRef)
                         oldType = oldType.GetElementType();
-                    var indexOf = genericArgument.FindIndex(x => x == oldType);
+                    var indexOf = methodGenericArgument.FindIndex(x => x == oldType);
                     if (indexOf >= 0)
                         return genericTypeParameterBuilders[indexOf];
                     return oldType;
@@ -382,24 +382,24 @@ namespace ProxyGenerator.Core
                 Type fieldType = parametersType[i - 1];
                 if(fieldType.IsByRef)
                     fieldType = fieldType.GetElementType();
-                FieldBuilder fieldBuilder = defineNestedType.DefineField("__fl" + i, fieldType,
+                FieldBuilder fieldBuilder = nestedType.DefineField("__fl" + i, fieldType,
                     FieldAttributes.Public);
                 fb[i] = fieldBuilder;
             }
             
             defineDefaultConstructor =
-                defineNestedType.DefineConstructor(MethodAttributes.Public, CallingConventions.Standard, null);
+                nestedType.DefineConstructor(MethodAttributes.Public, CallingConventions.Standard, null);
             ILGenerator constructorIlGenerator = defineDefaultConstructor.GetILGenerator();
             constructorIlGenerator.Ldarg(0);
             constructorIlGenerator.Ldc_I4(parametersType.Length);
             constructorIlGenerator.Emit(OpCodes.Call,ReflectionStaticValue.Invocation_Constructor);
             constructorIlGenerator.Emit(OpCodes.Ret);
 
-            defineNestedType.SetParent(ReflectionStaticValue.TypeInvocation);
-            FieldBuilder methodInfoStaticField = defineNestedType.DefineField("__methodInfo", ReflectionStaticValue.MethodInfoType,
+            nestedType.SetParent(ReflectionStaticValue.TypeInvocation);
+            FieldBuilder methodInfoStaticField = nestedType.DefineField("__methodInfo", ReflectionStaticValue.MethodInfoType,
                 FieldAttributes.Static | FieldAttributes.Private);
             
-            ConstructorBuilder staticConstructor = defineNestedType.DefineTypeInitializer();
+            ConstructorBuilder staticConstructor = nestedType.DefineTypeInitializer();
             ILGenerator staticCtorIL = staticConstructor.GetILGenerator();
 
             staticCtorIL.Emit(OpCodes.Ldtoken, methodInfo);
@@ -411,7 +411,7 @@ namespace ProxyGenerator.Core
             staticCtorIL.Emit(OpCodes.Ret);
 
             #region Create Invocation.Method Property
-            MethodBuilder implementGetForMethod = defineNestedType.DefineMethod(ReflectionStaticValue.Invocation_Method_Get.Name,MethodAttributes.Public|MethodAttributes.Virtual);
+            MethodBuilder implementGetForMethod = nestedType.DefineMethod(ReflectionStaticValue.Invocation_Method_Get.Name,MethodAttributes.Public|MethodAttributes.Virtual);
             implementGetForMethod.SetReturnType(ReflectionStaticValue.MethodInfoType);
             ILGenerator getMethodIL = implementGetForMethod.GetILGenerator();
             getMethodIL.Emit(OpCodes.Ldsfld,methodInfoStaticField);
@@ -419,7 +419,7 @@ namespace ProxyGenerator.Core
             #endregion
             
             MethodBuilder defineMethod =
-                defineNestedType.DefineMethod(nameof(IDefaultInvocation.Invoke), MethodAttributes.Public | MethodAttributes.Virtual,null,null);
+                nestedType.DefineMethod(nameof(IDefaultInvocation.Invoke), MethodAttributes.Public | MethodAttributes.Virtual,null,null);
             defineMethod.SetReturnType(ReflectionStaticValue.TypeObject);
             
             ILGenerator ilGenerator = defineMethod.GetILGenerator();
@@ -451,7 +451,7 @@ namespace ProxyGenerator.Core
             ilGenerator.Emit(OpCodes.Ret);
 
             #region Create Invocation.GetArgument Method
-            MethodBuilder implementForGetArgumentMethod = defineNestedType.DefineMethod(ReflectionStaticValue.Invocation_InternalGetArgument_Method.Name, MethodAttributes.Public | MethodAttributes.Virtual);
+            MethodBuilder implementForGetArgumentMethod = nestedType.DefineMethod(ReflectionStaticValue.Invocation_InternalGetArgument_Method.Name, MethodAttributes.Public | MethodAttributes.Virtual);
             implementForGetArgumentMethod.SetParameters(ReflectionStaticValue.Invocation_InternalGetArgument_Method.GetParameters().Select(x => x.ParameterType).ToArray());
             implementForGetArgumentMethod.SetReturnType(ReflectionStaticValue.Invocation_InternalGetArgument_Method.ReturnType);
             ILGenerator getArgumentMethodIl = implementForGetArgumentMethod.GetILGenerator();
@@ -477,7 +477,7 @@ namespace ProxyGenerator.Core
             #endregion
 
             #region Create Invocation.SetArgument Method
-            MethodBuilder implementForSetArgumentMethod = defineNestedType.DefineMethod(ReflectionStaticValue.Invocation_InternalSetArgument_Method.Name, MethodAttributes.Public | MethodAttributes.Virtual);
+            MethodBuilder implementForSetArgumentMethod = nestedType.DefineMethod(ReflectionStaticValue.Invocation_InternalSetArgument_Method.Name, MethodAttributes.Public | MethodAttributes.Virtual);
             implementForSetArgumentMethod.SetParameters(ReflectionStaticValue.Invocation_InternalSetArgument_Method.GetParameters().Select(x=>x.ParameterType).ToArray());
             ILGenerator setArgumentMethodIl = implementForSetArgumentMethod.GetILGenerator();
             
@@ -503,9 +503,9 @@ namespace ProxyGenerator.Core
 
             
 
-            defineNestedType.CreateType();
+            nestedType.CreateType();
             
-            return defineNestedType;
+            return nestedType;
             
         }
     }

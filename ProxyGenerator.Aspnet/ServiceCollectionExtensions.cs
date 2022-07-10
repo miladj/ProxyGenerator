@@ -119,11 +119,8 @@ namespace ProxyGenerator.Aspnet
             arguments[1] = interceptorsType.Select(inter => (IInterceptor)serviceProvider.GetServiceOrCreateInstance(inter)).ToArray();
             return serviceProvider.GetServiceOrCreateInstance(proxyType, arguments);
         }
-        //ActivatorUtilities.cs 
-        private static object GetServiceOrCreateInstance(this IServiceProvider provider, Type type, params object[] parameters)
-        {
-            return provider.GetService(type) ?? ActivatorUtilities.CreateInstance(provider, type,parameters);
-        }
+        
+        
         public static bool IsOpenGeneric(Type type)
         {
             return type.IsGenericTypeDefinition;

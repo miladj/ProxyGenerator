@@ -16,6 +16,16 @@ namespace ProxyGenerator.Aspnet
             return new ProxyMakerAspnet(typeToProxy,implementType,interceptorTypes).CreateProxy();
         }
         /// <summary>
+        /// Create A proxy resolve everything from IServiceProvider including <paramref name="typeToProxy"/> and <paramref name="interceptorTypes"/>
+        /// </summary>
+        /// <param name="typeToProxy">Base type to create proxy</param>
+        /// <param name="interceptorTypes">Interceptor Types</param>
+        /// <returns>Proxy Type</returns>
+        public static Type CreateProxyTypeWithoutImplementationTypeWithInterceptors(Type typeToProxy, params Type[] interceptorTypes)
+        {
+            return new ProxyMakerAspnet(typeToProxy, null, interceptorTypes).CreateProxy();
+        }
+        /// <summary>
         /// Create a proxy so open generic with a decorator
         /// this method is specifically useful when using open generic and ServiceCollection
         /// </summary>

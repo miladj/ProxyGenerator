@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Reflection.Emit;
+using System.Threading;
 using Microsoft.Extensions.DependencyInjection;
 using Moq;
 using NUnit.Framework;
@@ -83,6 +85,21 @@ namespace ProxyGenerator.Aspnet.Test
             string test = service.Test();
             Assert.AreEqual("OK",test);
             Assert.IsInstanceOf<SimpleDecorator>(service);
+        }
+        [Test]
+        public void SimpleTest_CheckIServiceProvider()
+        {
+            Mock<ISimple> mockSimple = new Mock<ISimple>();
+            mockSimple.Setup(x => x.Test()).Returns("OK");
+            IServiceProvider serviceCollection = CreateServiceCollection(services =>
+            {
+                services.AddTransient(typeof(ISimple), x => mockSimple.Object);
+            });
+            var type = ProxyMakerAspnet.CreateProxyTypeWithoutImplementationTypeWithInterceptors(typeof(ISimple));
+            var instance = Activator.CreateInstance(type, serviceCollection) as ISimple;
+            string test = instance.Test();
+            Assert.AreEqual("OK", test);
+            mockSimple.Verify(x=>x.Test(),Times.Once);
         }
         [Test]
         public void SimpleTest_Interceptor()

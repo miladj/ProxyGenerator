@@ -64,14 +64,14 @@ services.Decorate(typeof(ISimple<>), typeof(SimpleDecorator<>));
 
 1. this one help you create a proxy with two parameter constructor (typeToProxy,IInterceptor[] )
 ```C#
-ProxyMaker.CreateProxyType(Type typeToProxy,params Type[] interceptorTypes)
+ProxyMaker.CreateProxyType(Type typeToProxy)
 ```
 
 
-2. this one help you create a proxy that resolve types from `IServicePrvider` that accept from constructor so this method create a constructor that accept `IServiceProvider`
+2. this one help you create a proxy that resolve types from `IServicePrvider`. this type has a constructor that accepts `IServiceProvider`
 
 ```C#
-ProxyMaker.CreateProxyTypeUseIServiceProvider(Type typeToProxy,params Type[] interceptorTypes)
+ProxyMakerAspnet.CreateProxyTypeWithInterceptors(Type typeToProxy, Type implementType,params Type[] interceptorTypes)
 ```
 ***
 ## Interceptors
@@ -101,6 +101,10 @@ var argument=(int)invocation.GetArgument(0);//get first argument of method
 | ProxyCall            | 31.39 ns | 0.412 ns | 0.385 ns |
 | WindsorProxyCall     | 33.46 ns | 0.280 ns | 0.262 ns |
 
+
+## Nuget
+Install-Package ProxyGenerator.Core
+Install-Package ProxyGenerator.Aspnet
 
 
 ## Limitations

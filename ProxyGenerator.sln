@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.31624.102
+# Visual Studio Version 17
+VisualStudioVersion = 17.1.32414.318
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ProxyGenerator.Core", "ProxyGenerator.Core\ProxyGenerator.Core.csproj", "{D9B555C8-4BE5-4910-92B8-83578BC32CE1}"
 EndProject
@@ -16,6 +16,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Common", "Common", "{305E45B8-1808-4D30-83AF-776E3143A97D}"
 	ProjectSection(SolutionItems) = preProject
 		Common.Targets = Common.Targets
+		README.md = README.md
 	EndProjectSection
 EndProject
 Global
